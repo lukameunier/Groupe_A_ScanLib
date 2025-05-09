@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
 }
 
+val (major, minor, patch) = "0.1.0".split(".").map { it.toInt() }
+
 android {
     namespace = "fr.mastersd.sime.scanlib"
     compileSdk = 34
@@ -11,8 +13,8 @@ android {
         applicationId = "fr.mastersd.sime.scanlib"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionName = "$major.$minor.$patch"
+        versionCode = major * 10_000 + minor * 100 + patch
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
