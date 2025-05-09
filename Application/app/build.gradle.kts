@@ -1,9 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
-val (major, minor, patch) = "0.1.0".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.1.1".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
@@ -38,7 +41,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -47,4 +49,16 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.fragment)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.truth)
+    implementation(libs.dagger.hilt.android)
+    ksp(libs.dagger.hilt.compiler)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.androidx.core.testing)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.test.core)
+    implementation(libs.androidx.navigation.runtime)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 }
