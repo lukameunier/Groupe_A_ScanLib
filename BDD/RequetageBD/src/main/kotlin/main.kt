@@ -5,11 +5,9 @@ import okhttp3.logging.HttpLoggingInterceptor
 
 fun main() {
     val filePath = "scan.txt"
+    val repository = BookRepository(ScanFileReader(), GoogleBooksService())
 
-    val reader = ScanFileReader()
-    val service = GoogleBooksService()
-    val repository = BookRepository(reader, service)
-
+    // Traitement + affichage sont déjà faits dans BookRepository
     repository.syncBooksFromScanFile(filePath)
 }
 
