@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-val (major, minor, patch) = "0.1.1".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.2.0".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
