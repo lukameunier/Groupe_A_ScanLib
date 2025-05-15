@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">ScanLib</string>
+    <string name="home_title">Accueil</string>
+    <string name="add_book_desc_button">Ajouter un livre</string>
+    <string name="hint_search_bar_text">Rechercher dans la bibliothèque...</string>
+    <string name="genre_button_text">Genre</string>
+    <string name="filter_text_button">Filtre</string>
+    <string name="group_text_button">Tous</string>
+    <string name="content_desc_book_cover">Image de la couverture d\'un livre scanné</string>
+    <string name="book_title_text">Titre du livre</string>
+    <string name="capture_photo">Bouton qui permet de prendre une photo</string>
+    <string name="scan_title">Scan</string>
+    <string name="thumbnail_text_desc">Prévisualisation du traitement sur l\'image capturée</string>
+    <string name="details_title">Détails</string>
+    <string name="book_title">%s</string>
+    <string name="synopsis_title">Synopsis :</string>
+    <string name="synpsosis_text">%s</string>
+    <string name="author_name_text">%s %s</string>
+    <string name="date_publisher_text">Date de publication : %s</string>
+    <string name="genre_text">Genre : %s</string>
+    <string name="editor_name_text">Éditeur : %s</string>
+    <string name="isbn_code">ISBN : %s</string>
+    <string name="pages_number_text">Pages : %s</string>
+    <string name="edit_button_text_desc">Modifier les informations du livre</string>
+    <string name="return_button_text_desc">Permet de revenir à la page précédente</string>
+    <string name="erase_edit_button_text">Annuler les modifications</string>
+    <string name="valid_button_text">Accepte les modifications</string>
 </resources>

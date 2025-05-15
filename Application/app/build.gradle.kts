@@ -4,22 +4,27 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.androidx.navigation.safeargs)
 }
 
-val (major, minor, patch) = "0.2.0".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.3.0".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "fr.mastersd.sime.scanlib"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionName = "$major.$minor.$patch"
         versionCode = major * 10_000 + minor * 100 + patch
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 
     buildTypes {
@@ -29,6 +34,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -41,6 +47,11 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
