@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
-val (major, minor, patch) = "0.3.0".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.3.2".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.exifinterface)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

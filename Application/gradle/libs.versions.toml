@@ -20,6 +20,7 @@ mockito = "5.13.0"
 parcelize = "2.0.20"
 coreTesting = "2.2.0"
 testCore = "1.6.1"
+exifinterface = "1.4.1"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -47,6 +48,7 @@ dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", ve
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTesting"}
 androidx-test-core = { group = "androidx.test", name = "core-ktx", version.ref = "testCore"}
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

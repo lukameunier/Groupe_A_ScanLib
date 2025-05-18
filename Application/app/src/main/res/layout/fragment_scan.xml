@@ -84,9 +84,21 @@
         android:contentDescription="@string/capture_photo"
         app:backgroundTint="@color/primary_button"
         app:layout_constraintTop_toTopOf="@id/cardThumbnailContainer"
-        app:layout_constraintBottom_toBottomOf="@id/cardThumbnailContainer"
+        app:layout_constraintBottom_toTopOf="@id/tempButton"
         app:layout_constraintEnd_toEndOf="@id/cardCameraXContainer"
         app:srcCompat="@drawable/baseline_camera_24"
+        app:tint="@color/secondary_text" />
+
+    <!-- Bouton temporaire -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/tempButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:backgroundTint="@color/primary_button"
+        app:layout_constraintTop_toBottomOf="@id/captureButton"
+        app:layout_constraintBottom_toBottomOf="@id/cardThumbnailContainer"
+        app:layout_constraintEnd_toEndOf="@id/cardCameraXContainer"
+        app:srcCompat="@drawable/outline_files_24"
         app:tint="@color/secondary_text" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
