@@ -79,14 +79,9 @@ class ScanFragment : Fragment() {
             val bitmap = getRotatedBitmap(path)
             binding.previewThumbnail.setImageBitmap(bitmap)
 
-            val boxes = bookSpineDetector.detect(bitmap)
+            val (boxes, modelSize) = bookSpineDetector.detect(bitmap)
 
-            if (boxes.isNotEmpty()) {
-                overlayView.setBitmapAndBoxes(bitmap, boxes)
-            } else {
-                overlayView.setBitmapAndBoxes(bitmap, emptyList())
-            }
-
+            overlayView.setBitmapAndBoxes(bitmap, boxes, modelSize)
         }
     }
 

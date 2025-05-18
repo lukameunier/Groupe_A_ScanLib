@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
-val (major, minor, patch) = "0.4.0".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.4.1".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
