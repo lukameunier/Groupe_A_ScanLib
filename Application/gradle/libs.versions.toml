@@ -15,6 +15,8 @@ kotlinKsp = "2.0.20-1.0.24"
 fragment = "1.8.6"
 navigation = "2.9.0"
 coroutinesTest = "1.9.0"
+tensorflowLite = "2.12.0"
+tensorflowLiteSupport = "0.4.3"
 truth = "1.4.4"
 mockito = "5.13.0"
 parcelize = "2.0.20"
@@ -42,6 +44,9 @@ androidx-navigation-ui = { group = "androidx.navigation", name = "navigation-ui-
 androidx-navigation-safeargs = { group = "androidx.navigation", name = "navigation-safe-args-gradle-plugin", version.ref = "navigation"}
 androidx-fragment = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLite" }
+tensorflow-lite-gpu = { module = "org.tensorflow:tensorflow-lite-gpu", version.ref = "tensorflowLite" }
+tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "daggerHilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "daggerHilt" }

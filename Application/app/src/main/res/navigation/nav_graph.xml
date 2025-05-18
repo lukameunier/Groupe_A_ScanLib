@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="fr.mastersd.sime.scanlib.ui.view.HomeFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.HomeFragment"
         android:label="HomeFragment"
         tools:layout="@layout/fragment_home">
         <action
@@ -19,7 +19,7 @@
     </fragment>
     <fragment
         android:id="@+id/scanFragment"
-        android:name="fr.mastersd.sime.scanlib.ui.view.ScanFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.ScanFragment"
         android:label="ScanFragment"
         tools:layout="@layout/fragment_scan">
         <action
@@ -28,7 +28,7 @@
     </fragment>
     <fragment
         android:id="@+id/detailsFragment"
-        android:name="fr.mastersd.sime.scanlib.ui.view.DetailsFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.DetailsFragment"
         android:label="DetailsFragment"
         tools:layout="@layout/fragment_details">
         <action
@@ -40,7 +40,7 @@
     </fragment>
     <fragment
         android:id="@+id/editFragment"
-        android:name="fr.mastersd.sime.scanlib.ui.view.EditFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.EditFragment"
         android:label="EditFragment"
         tools:layout="@layout/fragment_edit">
         <action

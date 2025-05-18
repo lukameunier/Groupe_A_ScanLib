@@ -67,14 +67,26 @@
         app:layout_constraintStart_toStartOf="@id/cardCameraXContainer"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:id="@+id/previewThumbnail"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/thumbnail_text_desc"
-            android:scaleType="centerCrop"
-            tools:src="@drawable/ic_launcher_background" />
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/previewThumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/thumbnail_text_desc"
+                tools:src="@drawable/ic_launcher_background" />
+
+            <fr.mastersd.sime.scanlib.ui.view.customs.BoxOverlayView
+                android:id="@+id/overlayView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"/>
+        </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
+
 
     <!-- Bouton de capture -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

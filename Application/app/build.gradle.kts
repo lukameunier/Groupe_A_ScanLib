@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
-val (major, minor, patch) = "0.3.2".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.4.0".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
@@ -47,6 +47,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.gpu)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
