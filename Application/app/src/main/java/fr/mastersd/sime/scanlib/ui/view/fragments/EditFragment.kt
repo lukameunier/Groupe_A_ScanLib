@@ -28,7 +28,7 @@ class EditFragment: Fragment() {
         val args = DetailsFragmentArgs.fromBundle(requireArguments())
         val book = args.book
         binding.eraseButton.setOnClickListener {
-            val action = DetailsFragmentDirections.actionDetailsFragmentToEditFragment(book)
+            val action = EditFragmentDirections.actionEditFragmentToDetailsFragment(book)
             findNavController().navigate(action)
         }
 

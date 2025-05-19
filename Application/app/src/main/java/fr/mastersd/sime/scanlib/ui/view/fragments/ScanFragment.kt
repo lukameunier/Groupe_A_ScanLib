@@ -29,6 +29,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
+import fr.mastersd.sime.scanlib.domain.model.Book
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import java.io.FileOutputStream
@@ -71,14 +72,9 @@ class ScanFragment : Fragment() {
             Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres")
             if (result.foundBooks.isNotEmpty()) {
                 if (result.foundBooks.size == 1) {
-                    showBookDetailsDialog(result.foundBooks[0])
+                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks)
                 } else {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Choisir une édition")
-                        .setItems(result.foundBooks.map { it.title }.toTypedArray()) { _, index ->
-                            showBookDetailsDialog(result.foundBooks[index])
-                        }
-                        .show()
+                    showBookListDialog(result.foundBooks)
                 }
             } else {
                 Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
@@ -119,6 +115,11 @@ class ScanFragment : Fragment() {
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
 
+        returnButton.setOnClickListener {
+            val action = ScanFragmentDirections.actionScanFragmentToHomeFragment()
+            findNavController().navigate(action)
+        }
+
         previewThumbnail.setOnClickListener {
             val images = viewModel.getAllCapturedImages()
             if (images.isEmpty()) {
@@ -138,8 +139,8 @@ class ScanFragment : Fragment() {
     }
 
     //===== Affichage informations =====
-    private fun showBookDetailsDialog(book: fr.mastersd.sime.scanlib.domain.model.Book) {
-        val message = """
+    private fun showBookDetailsDialog(book: Book, allBooks: List<Book>) {
+    val message = """
         📘 Titre            : ${book.title}
         👤 Auteur(s)        : ${book.authors.joinToString()}
         🏢 Éditeur          : ${book.publisher}
@@ -154,8 +155,22 @@ class ScanFragment : Fragment() {
             .setTitle("Détails du livre")
             .setMessage(message)
             .setPositiveButton("OK", null)
+            .setNegativeButton("Voir autres résultats") { _, _ ->
+                showBookListDialog(allBooks)
+            }
             .show()
     }
+
+    private fun showBookListDialog(books: List<Book>) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Choisir une édition")
+            .setItems(books.map { it.title }.toTypedArray()) { _, index ->
+                showBookDetailsDialog(books[index], books)
+            }
+            .setNegativeButton("Fermer", null)
+            .show()
+    }
+
 
     private fun checkCameraPermission() {
         when {
