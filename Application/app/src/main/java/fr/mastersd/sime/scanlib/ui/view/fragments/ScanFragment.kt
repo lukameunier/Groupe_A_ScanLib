@@ -7,8 +7,13 @@ import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
 import android.app.AlertDialog
 import android.content.pm.PackageManager
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +32,7 @@ import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ui.view.customs.BoxOverlayView
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
+import java.io.FileOutputStream
 
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
@@ -77,10 +83,20 @@ class ScanFragment : Fragment() {
     private fun setupObservers() {
         viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
             val bitmap = getRotatedBitmap(path)
-            binding.previewThumbnail.setImageBitmap(bitmap)
-
             val (boxes, modelSize) = bookSpineDetector.detect(bitmap)
 
+            val boxedBitmap = drawBoxesOnBitmap(bitmap, boxes, modelSize)
+
+            try {
+                FileOutputStream(path).use { output ->
+                    boxedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+                }
+                Log.d("ScanFragment", "Image avec boîtes enregistrée dans $path")
+            } catch (e: Exception) {
+                Log.e("ScanFragment", "Erreur lors de l’enregistrement de l’image annotée", e)
+            }
+
+            binding.previewThumbnail.setImageBitmap(boxedBitmap)
             overlayView.setBitmapAndBoxes(bitmap, boxes, modelSize)
         }
     }
@@ -101,6 +117,7 @@ class ScanFragment : Fragment() {
                     // Utilisation de getRotatedBitmap ici aussi
                     val rotated = getRotatedBitmap(images[index].absolutePath)
                     previewThumbnail.setImageBitmap(rotated)
+                    overlayView.clear()
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
@@ -145,6 +162,7 @@ class ScanFragment : Fragment() {
             // ImageCapture avec même rotation
             val imageCapture = ImageCapture.Builder()
                 .setTargetRotation(binding.previewView.display.rotation)
+                //.setTargetResolution(Size(640, 640))
                 .build()
                 .also(viewModel::setImageCapture)
 
@@ -183,6 +201,33 @@ class ScanFragment : Fragment() {
     private fun handleCameraDenied() {
         Toast.makeText(requireContext(), "Permission caméra refusée", Toast.LENGTH_SHORT).show()
         findNavController().navigateUp()
+    }
+
+    private fun drawBoxesOnBitmap(base: Bitmap, boxes: List<RectF>, inputSize: Size): Bitmap {
+        val output = base.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(output)
+
+        val scaleX = base.width.toFloat() / inputSize.width
+        val scaleY = base.height.toFloat() / inputSize.height
+
+        val paint = Paint().apply {
+            color = Color.RED
+            style = Paint.Style.STROKE
+            strokeWidth = 10f
+            isAntiAlias = true
+        }
+
+        boxes.forEach { box ->
+            val scaledBox = RectF(
+                box.left * scaleX,
+                box.top * scaleY,
+                box.right * scaleX,
+                box.bottom * scaleY
+            )
+            canvas.drawRect(scaledBox, paint)
+        }
+
+        return output
     }
 }
 

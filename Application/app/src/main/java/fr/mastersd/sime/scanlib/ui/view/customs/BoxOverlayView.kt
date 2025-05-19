@@ -8,7 +8,6 @@ import android.view.View
 
 class BoxOverlayView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
-    private val transformMatrix = Matrix()
     private val tempRect = RectF()
 
     private var bitmap: Bitmap? = null
@@ -18,7 +17,6 @@ class BoxOverlayView(context: Context, attrs: AttributeSet?) : View(context, att
     private val boxPaint = Paint().apply {
         color = Color.RED
         style = Paint.Style.STROKE
-        strokeWidth = 4f
         isAntiAlias = true
     }
 
@@ -32,10 +30,13 @@ class BoxOverlayView(context: Context, attrs: AttributeSet?) : View(context, att
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        bitmap?.let {
+        bitmap?.let { bmp ->
             modelInputSize?.let { input ->
                 val scaleX = width.toFloat() / input.width.toFloat()
                 val scaleY = height.toFloat() / input.height.toFloat()
+
+                val avgSize = (bmp.width + bmp.height) / 2f
+                boxPaint.strokeWidth = avgSize / 200f
 
                 boxes.forEach { box ->
                     tempRect.set(
@@ -48,5 +49,12 @@ class BoxOverlayView(context: Context, attrs: AttributeSet?) : View(context, att
                 }
             }
         }
+    }
+
+    fun clear() {
+        this.bitmap = null
+        this.boxes = emptyList()
+        this.modelInputSize = null
+        invalidate()
     }
 }

@@ -65,6 +65,7 @@ class BookSpineDetector(assetManager: AssetManager) {
         }
 
         val threshold = 0.25f
+        val nmsThreshold = 0.50f
         val boxesXYXY = mutableListOf<RectF>()
         val scores = mutableListOf<Float>()
 
@@ -85,7 +86,15 @@ class BookSpineDetector(assetManager: AssetManager) {
             }
         }
 
-        val nmsBoxes = nonMaxSuppression(boxesXYXY, scores, 0.5f, threshold, 50)
+        val nmsBoxes = nonMaxSuppression(boxesXYXY, scores, 0.5f, nmsThreshold, 50)
+
+        Log.d("BookSpineDetector", "Boxes detected above threshold: ${boxesXYXY.size}")
+        Log.d("BookSpineDetector", "Boxes kept after NMS: ${nmsBoxes.size}")
+
+        nmsBoxes.take(5).forEachIndexed { i, box ->
+            Log.d("BookSpineDetector", "Box[$i] = left=${box.left}, top=${box.top}, right=${box.right}, bottom=${box.bottom}")
+        }
+
         return Pair(nmsBoxes, Size(inputSize, inputSize))
     }
 
