@@ -25,13 +25,15 @@ class EditFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val args = DetailsFragmentArgs.fromBundle(requireArguments())
+        val book = args.book
         binding.eraseButton.setOnClickListener {
-            val action = EditFragmentDirections.actionEditFragmentToDetailsFragment()
+            val action = DetailsFragmentDirections.actionDetailsFragmentToEditFragment(book)
             findNavController().navigate(action)
         }
 
         binding.validButton.setOnClickListener{
-            val action = EditFragmentDirections.actionEditFragmentToDetailsFragment()
+            val action = EditFragmentDirections.actionEditFragmentToDetailsFragment(book)
             findNavController().navigate(action)
         }
     }

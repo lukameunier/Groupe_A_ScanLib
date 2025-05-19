@@ -31,6 +31,12 @@
         android:name="fr.mastersd.sime.scanlib.ui.view.fragments.DetailsFragment"
         android:label="DetailsFragment"
         tools:layout="@layout/fragment_details">
+
+        <argument
+            android:name="book"
+            app:argType="fr.mastersd.sime.scanlib.domain.model.Book"
+            app:nullable="false" />
+
         <action
             android:id="@+id/action_detailsFragment_to_editFragment"
             app:destination="@id/editFragment" />
@@ -43,6 +49,12 @@
         android:name="fr.mastersd.sime.scanlib.ui.view.fragments.EditFragment"
         android:label="EditFragment"
         tools:layout="@layout/fragment_edit">
+
+        <argument
+            android:name="book"
+            app:argType="fr.mastersd.sime.scanlib.domain.model.Book"
+            app:nullable="false" />
+
         <action
             android:id="@+id/action_editFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />

@@ -25,8 +25,12 @@ class DetailsFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val args = DetailsFragmentArgs.fromBundle(requireArguments())
+        val book = args.book
+
         binding.editButton.setOnClickListener{
-            val action = DetailsFragmentDirections.actionDetailsFragmentToEditFragment()
+            val action = DetailsFragmentDirections.actionDetailsFragmentToEditFragment(book)
             findNavController().navigate(action)
         }
 
@@ -34,5 +38,14 @@ class DetailsFragment: Fragment() {
             val action = DetailsFragmentDirections.actionDetailsFragmentToHomeFragment()
             findNavController().navigate(action)
         }
+
+        binding.bookTitle.text = book.title
+        binding.authorName.text = book.authors.toString()
+        binding.bookGenre.text
+        binding.datePublisher.text
+        binding.editor.text
+        binding.pagesNumber.text
+        binding.isbn.text
+        binding.synopsisContent.text = book.description
     }
 }

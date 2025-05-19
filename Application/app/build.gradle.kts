@@ -8,7 +8,7 @@ plugins {
     id("kotlin-kapt")
 }
 
-val (major, minor, patch) = "0.5.0".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.5.3".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
