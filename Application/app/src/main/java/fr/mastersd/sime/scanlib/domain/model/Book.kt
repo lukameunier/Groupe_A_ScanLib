@@ -1,5 +1,9 @@
 package fr.mastersd.sime.scanlib.domain.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Book(
     val id: String,
     val title: String,
@@ -13,4 +17,4 @@ data class Book(
     val previewLink: String?,
     val infoLink: String?,
     val buyLink: String?
-)
+) : Parcelable

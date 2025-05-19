@@ -111,7 +111,7 @@ class HomeFragment: Fragment() {
         val bookList = listOf(dummyBook1, dummyBook2, dummyBook3, dummyBook4, dummyBook5)
 
         val adapter = BookAdapter(bookList) { selectedBook ->
-            val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment()
+            val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(selectedBook)
             findNavController().navigate(action)
         }
 

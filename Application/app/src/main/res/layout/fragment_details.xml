@@ -51,6 +51,7 @@
 
     <!-- Titre du livre -->
     <TextView
+        android:id="@+id/bookTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/book_title"
@@ -171,6 +172,7 @@
 
     <!-- Corps du synopsis -->
     <TextView
+        android:id="@+id/synopsis_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/synpsosis_text"
