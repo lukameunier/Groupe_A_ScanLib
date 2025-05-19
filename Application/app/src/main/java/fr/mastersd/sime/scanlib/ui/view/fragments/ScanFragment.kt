@@ -48,16 +48,14 @@ class ScanFragment : Fragment() {
         ProcessCameraProvider.getInstance(requireContext())
     }
 
+    private var syncStartTime: Long = 0L
+
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startCamera() else handleCameraDenied()
         }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScanBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -69,12 +67,16 @@ class ScanFragment : Fragment() {
         bookSpineDetector = BookSpineDetector(requireContext().assets)
 
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
-            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres")
+            val duration = System.currentTimeMillis() - syncStartTime
+            val timeString = "️${duration} ms"
+
+            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
+
             if (result.foundBooks.isNotEmpty()) {
                 if (result.foundBooks.size == 1) {
-                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks)
+                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks, timeString)
                 } else {
-                    showBookListDialog(result.foundBooks)
+                    showBookListDialog(result.foundBooks, timeString)
                 }
             } else {
                 Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
@@ -111,7 +113,6 @@ class ScanFragment : Fragment() {
         }
     }
 
-
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
 
@@ -131,53 +132,54 @@ class ScanFragment : Fragment() {
                 .setItems(images.map { it.name }.toTypedArray()) { _, index ->
                     val rotated = getRotatedBitmap(images[index].absolutePath)
                     previewThumbnail.setImageBitmap(rotated)
-                    viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
         }
+
+        tempButton.setOnClickListener {
+            syncStartTime = System.currentTimeMillis()
+            viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
+        }
     }
 
-    //===== Affichage informations =====
-    private fun showBookDetailsDialog(book: Book, allBooks: List<Book>) {
-    val message = """
-        📘 Titre            : ${book.title}
-        👤 Auteur(s)        : ${book.authors.joinToString()}
-        🏢 Éditeur          : ${book.publisher}
-        📅 Date de pub.     : ${book.publishedDate}
-        📝 Description      : ${book.description}
-        📄 Pages            : ${book.pageCount}
-        🔗 Lien             : ${book.infoLink ?: "N/A"}
-        🖼️ Couverture       : ${book.thumbnailUrl ?: "Pas d'image disponible"}
-    """.trimIndent()
+    private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
+        val message = """
+            $duration
+
+            📘 Titre            : ${book.title}
+            👤 Auteur(s)        : ${book.authors.joinToString()}
+            🏢 Éditeur          : ${book.publisher}
+            📅 Date de pub.     : ${book.publishedDate}
+            📝 Description      : ${book.description}
+            📄 Pages            : ${book.pageCount}
+            🔗 Lien             : ${book.infoLink ?: "N/A"}
+            🖼️ Couverture       : ${book.thumbnailUrl ?: "Pas d'image disponible"}
+        """.trimIndent()
 
         AlertDialog.Builder(requireContext())
             .setTitle("Détails du livre")
             .setMessage(message)
             .setPositiveButton("OK", null)
             .setNegativeButton("Voir autres résultats") { _, _ ->
-                showBookListDialog(allBooks)
+                showBookListDialog(allBooks, duration)
             }
             .show()
     }
 
-    private fun showBookListDialog(books: List<Book>) {
+    private fun showBookListDialog(books: List<Book>, duration: String) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Choisir une édition")
+            .setTitle("Choisir une édition ($duration)")
             .setItems(books.map { it.title }.toTypedArray()) { _, index ->
-                showBookDetailsDialog(books[index], books)
+                showBookDetailsDialog(books[index], books, duration)
             }
             .setNegativeButton("Fermer", null)
             .show()
     }
 
-
     private fun checkCameraPermission() {
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> startCamera()
-
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> startCamera()
             shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                 AlertDialog.Builder(requireContext())
                     .setTitle("Permission requise")
@@ -188,7 +190,6 @@ class ScanFragment : Fragment() {
                     .setNegativeButton("Refuser") { _, _ -> handleCameraDenied() }
                     .show()
             }
-
             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
@@ -197,16 +198,13 @@ class ScanFragment : Fragment() {
         cameraProviderFuture.addListener({
             val provider = cameraProviderFuture.get()
 
-            // Preview suiveuse de rotation
             val preview = Preview.Builder()
                 .setTargetRotation(binding.previewView.display.rotation)
                 .build()
                 .also { it.surfaceProvider = binding.previewView.surfaceProvider }
 
-            // ImageCapture avec même rotation
             val imageCapture = ImageCapture.Builder()
                 .setTargetRotation(binding.previewView.display.rotation)
-                //.setTargetResolution(Size(640, 640))
                 .build()
                 .also(viewModel::setImageCapture)
 
@@ -224,14 +222,10 @@ class ScanFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    /** Charge et corrige l’orientation d’une JPEG grâce à ses métadonnées EXIF */
     private fun getRotatedBitmap(path: String): Bitmap {
         val bmp = BitmapFactory.decodeFile(path)
         val exif = ExifInterface(path)
-        val orientation = exif.getAttributeInt(
-            ExifInterface.TAG_ORIENTATION,
-            ExifInterface.ORIENTATION_NORMAL
-        )
+        val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
         val matrix = Matrix().apply {
             when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90   -> postRotate(90f)
