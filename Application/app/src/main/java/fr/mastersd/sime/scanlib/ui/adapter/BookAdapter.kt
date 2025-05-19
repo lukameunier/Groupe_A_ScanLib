@@ -7,13 +7,20 @@ import coil.load
 import fr.mastersd.sime.scanlib.databinding.ViewHolderBookBinding
 import fr.mastersd.sime.scanlib.domain.model.Book
 
-class BookAdapter(private val books: List<Book>) : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
+class BookAdapter(
+    private val books: List<Book>,
+    private val onBookClick: (Book) -> Unit
+) : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
 
     inner class BookViewHolder(private val binding: ViewHolderBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(book: Book) {
             binding.bookTitle.text = book.title
             book.thumbnailUrl?.let {
                 binding.bookCoverImage.load(it)
+            }
+
+            binding.root.setOnClickListener {
+                onBookClick(book)
             }
         }
     }

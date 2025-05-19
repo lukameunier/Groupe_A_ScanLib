@@ -225,4 +225,3 @@ class ScanFragment : Fragment() {
         return output
     }
 }
-
