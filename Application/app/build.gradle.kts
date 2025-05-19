@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.androidx.navigation.safeargs)
+    id("kotlin-kapt")
 }
 
 val (major, minor, patch) = "0.5.0".split(".").map { it.toInt() }
@@ -77,4 +78,8 @@ dependencies {
     implementation(libs.androidx.navigation.runtime)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
+    implementation(libs.gson)
 }

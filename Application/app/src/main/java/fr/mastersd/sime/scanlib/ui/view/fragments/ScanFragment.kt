@@ -67,6 +67,24 @@ class ScanFragment : Fragment() {
 
         bookSpineDetector = BookSpineDetector(requireContext().assets)
 
+        viewModel.syncResult.observe(viewLifecycleOwner) { result ->
+            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres")
+            if (result.foundBooks.isNotEmpty()) {
+                if (result.foundBooks.size == 1) {
+                    showBookDetailsDialog(result.foundBooks[0])
+                } else {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Choisir une édition")
+                        .setItems(result.foundBooks.map { it.title }.toTypedArray()) { _, index ->
+                            showBookDetailsDialog(result.foundBooks[index])
+                        }
+                        .show()
+                }
+            } else {
+                Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         setupObservers()
         setupListeners()
         checkCameraPermission()
@@ -110,17 +128,33 @@ class ScanFragment : Fragment() {
             AlertDialog.Builder(requireContext())
                 .setTitle("Images capturées")
                 .setItems(images.map { it.name }.toTypedArray()) { _, index ->
-                    // Utilisation de getRotatedBitmap ici aussi
                     val rotated = getRotatedBitmap(images[index].absolutePath)
                     previewThumbnail.setImageBitmap(rotated)
+                    viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
         }
+    }
 
-        returnButton.setOnClickListener {
-            findNavController().navigateUp()
-        }
+    //===== Affichage informations =====
+    private fun showBookDetailsDialog(book: fr.mastersd.sime.scanlib.domain.model.Book) {
+        val message = """
+        📘 Titre            : ${book.title}
+        👤 Auteur(s)        : ${book.authors.joinToString()}
+        🏢 Éditeur          : ${book.publisher}
+        📅 Date de pub.     : ${book.publishedDate}
+        📝 Description      : ${book.description}
+        📄 Pages            : ${book.pageCount}
+        🔗 Lien             : ${book.infoLink ?: "N/A"}
+        🖼️ Couverture       : ${book.thumbnailUrl ?: "Pas d'image disponible"}
+    """.trimIndent()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Détails du livre")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     private fun checkCameraPermission() {

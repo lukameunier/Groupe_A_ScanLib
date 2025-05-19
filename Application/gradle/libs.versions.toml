@@ -24,6 +24,8 @@ parcelize = "2.0.20"
 coreTesting = "2.2.0"
 testCore = "1.6.1"
 exifinterface = "1.4.1"
+room = "2.6.1"
+gson = "2.10.1"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCore" }
@@ -56,6 +58,10 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTesting"}
 androidx-test-core = { group = "androidx.test", name = "core-ktx", version.ref = "testCore"}
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
