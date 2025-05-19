@@ -30,7 +30,6 @@ import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
-import fr.mastersd.sime.scanlib.ui.view.customs.BoxOverlayView
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import java.io.FileOutputStream
 
@@ -43,7 +42,6 @@ class ScanFragment : Fragment() {
     private val viewModel: BookViewModel by viewModels()
 
     private lateinit var bookSpineDetector: BookSpineDetector
-    private lateinit var overlayView: BoxOverlayView
 
     private val cameraProviderFuture by lazy {
         ProcessCameraProvider.getInstance(requireContext())
@@ -68,7 +66,6 @@ class ScanFragment : Fragment() {
         viewModel.setContext(requireContext())
 
         bookSpineDetector = BookSpineDetector(requireContext().assets)
-        overlayView = binding.overlayView
 
         setupObservers()
         setupListeners()
@@ -97,7 +94,6 @@ class ScanFragment : Fragment() {
             }
 
             binding.previewThumbnail.setImageBitmap(boxedBitmap)
-            overlayView.setBitmapAndBoxes(bitmap, boxes, modelSize)
         }
     }
 
@@ -117,7 +113,6 @@ class ScanFragment : Fragment() {
                     // Utilisation de getRotatedBitmap ici aussi
                     val rotated = getRotatedBitmap(images[index].absolutePath)
                     previewThumbnail.setImageBitmap(rotated)
-                    overlayView.clear()
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
@@ -213,7 +208,7 @@ class ScanFragment : Fragment() {
         val paint = Paint().apply {
             color = Color.RED
             style = Paint.Style.STROKE
-            strokeWidth = 10f
+            strokeWidth = 50f
             isAntiAlias = true
         }
 
