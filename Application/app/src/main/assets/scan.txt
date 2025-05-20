@@ -1,1 +1,7 @@
-SALEM STEPHEN KING
+Bel-ami;Guy de Maupassant
+1984;George Orwell
+Le Petit Prince;Antoine de Saint-Exupéry
+Les Misérables;Victor Hugo
+L'Étranger;Albert Camus
+Pride and Prejudice;Jane Austen
+Don Quixote;Miguel de Cervantes
