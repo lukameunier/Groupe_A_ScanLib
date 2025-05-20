@@ -165,11 +165,27 @@ class ScanFragment : Fragment() {
                 .show()
         }
 
+        //Bouton temporaire pour test manuel Room
         tempButton.setOnClickListener {
-            syncStartTime = System.currentTimeMillis()
-            viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
+
+         syncStartTime = System.currentTimeMillis()
+         viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
+
+        //-----------------------------
+        //INSERTION D'UN LIVRE MANUEL
+        //------------------------------
+        /* A decommenter si envie de tester 
+        viewModel.insertSampleBook(requireContext())
+        viewModel.getAllBooks(requireContext())
+        viewModel.fetchBooksFromDb(requireContext())
+        viewModel.booksFromDb.observe(viewLifecycleOwner) { books ->
+            books.forEach {
+                Toast.makeText(requireContext(), "📘 ${it.title}", Toast.LENGTH_SHORT).show()
+            }
         }
+         */
     }
+}
 
     private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
         val message = """

@@ -3,6 +3,8 @@ package fr.mastersd.sime.scanlib.data.repository
 import android.content.Context
 import android.util.Log
 import fr.mastersd.sime.scanlib.data.file.ScanFileReader
+import fr.mastersd.sime.scanlib.data.local.BookDao
+import fr.mastersd.sime.scanlib.data.local.BookEntity
 import fr.mastersd.sime.scanlib.data.remote.GoogleBooksService
 import fr.mastersd.sime.scanlib.domain.model.Book
 import fr.mastersd.sime.scanlib.domain.model.BookSyncResult
@@ -13,7 +15,8 @@ import kotlinx.coroutines.withContext
 
 class BookRepositoryImpl(
     private val scanFileReader: ScanFileReader = ScanFileReader(),
-    val googleBooksService: GoogleBooksService = GoogleBooksService() // public seulement pour logs temporaires
+    val googleBooksService: GoogleBooksService = GoogleBooksService(), // public seulement pour logs temporaires
+    private val bookDao: BookDao
 ) : BookRepository {
 
     override suspend fun syncBooksFromScanFile(filePath: String): BookSyncResult = withContext(Dispatchers.IO) {
@@ -24,6 +27,11 @@ class BookRepositoryImpl(
     override suspend fun syncBooksFromAssets(context: Context, assetFileName: String): BookSyncResult = withContext(Dispatchers.IO) {
         val scanResults = scanFileReader.readScanResultsFromAssets(context, assetFileName)
         return@withContext fetchBooksAndLog(scanResults)
+    }
+
+    // Utiliser Room pour l'insertion
+    override suspend fun insertBook(book: BookEntity) {
+        bookDao.insertBooks(listOf(book))
     }
 
     // Factorise la logique de fetch et logs

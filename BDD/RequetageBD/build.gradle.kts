@@ -43,5 +43,5 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClass.set("MainKt") // Change ça si ton point d'entrée a un autre nom
+    mainClass.set("MainKt") // nom de la classe avec la fonction main
 }
