@@ -21,20 +21,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/returnButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/return_button_text_desc"
-        app:backgroundTint="@color/primary_button"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/cardCameraXContainer"
-        app:layout_constraintTop_toBottomOf="@id/headerTitle"
-        app:srcCompat="@drawable/outline_arrow_back_24"
-        app:tint="@color/secondary_text" />
-
     <!-- Vue principale de la caméra avec coins arrondis -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardCameraXContainer"

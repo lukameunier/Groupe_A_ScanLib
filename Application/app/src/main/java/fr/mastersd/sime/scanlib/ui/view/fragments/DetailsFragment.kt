@@ -9,6 +9,7 @@ import androidx.navigation.fragment.findNavController
 import coil.load
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
+import androidx.core.view.isEmpty
 
 @AndroidEntryPoint
 class DetailsFragment: Fragment() {
@@ -30,24 +31,14 @@ class DetailsFragment: Fragment() {
         val args = DetailsFragmentArgs.fromBundle(requireArguments())
         val book = args.book
 
-        binding.editButton.setOnClickListener{
-            val action = DetailsFragmentDirections.actionDetailsFragmentToEditFragment(book)
-            findNavController().navigate(action)
-        }
-
-        binding.returnButton.setOnClickListener{
-            val action = DetailsFragmentDirections.actionDetailsFragmentToHomeFragment()
-            findNavController().navigate(action)
-        }
-
         binding.bookTitle.text = book.title
-        binding.authorName.text = book.authors.joinToString()
-        binding.bookGenre.text = book.categories?.joinToString() ?: "Genre inconnu"
-        binding.datePublisher.text = book.publishedDate ?: "Date inconnue"
-        binding.editor.text = book.publisher ?: "Éditeur inconnu"
-        binding.pagesNumber.text = book.pageCount.toString()
-        binding.isbn.text = book.industryIdentifiers?.joinToString() ?: "Non disponible"
-        binding.synopsisContent.text = book.description ?: "Pas de résumé disponible"
+        binding.authorName.setText(book.authors.joinToString())
+        binding.bookGenreEditText.setText(book.categories?.joinToString() ?: "À préciser...")
+        binding.datePublisherEditText.setText(book.publishedDate ?: "À préciser...")
+        binding.editorEditText.setText(book.publisher ?: "À préciser...")
+        binding.pagesNumberEditText.setText(book.pageCount.toString())
+        binding.isbnEditText.setText(book.industryIdentifiers?.joinToString() ?: "À préciser...")
+        binding.synopsisContent.text = book.description ?: "À préciser..."
 
         val imageView = android.widget.ImageView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
@@ -59,7 +50,7 @@ class DetailsFragment: Fragment() {
 
         imageView.load(book.thumbnailUrl)
 
-        if (binding.cardPreviewContainer.childCount == 0) {
+        if (binding.cardPreviewContainer.isEmpty()) {
             binding.cardPreviewContainer.addView(imageView)
         }
     }
