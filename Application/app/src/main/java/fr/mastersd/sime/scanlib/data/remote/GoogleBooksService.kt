@@ -12,9 +12,9 @@ class GoogleBooksService {
     private val client = OkHttpClient()
     private val gson = Gson()
 
-    fun searchBook(title: String, author: String): List<Book> {
+    fun searchBook(titleAuthor: String): List<Book> {
         val books = mutableListOf<Book>()
-        val query = "intitle:$title+inauthor:$author"
+        val query = "$titleAuthor"
         val url = "https://www.googleapis.com/books/v1/volumes?q=$query" //creer la requete Google Books : https://www.googleapis.com/books/v1/volumes?q=intitle:$title+inauthor:$author
         Log.d("GoogleBooksService", "Requête envoyée à: $url")
 

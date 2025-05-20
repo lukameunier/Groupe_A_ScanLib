@@ -22,7 +22,7 @@ class BookRepositoryImpl(
     }
 
     override suspend fun syncBooksFromAssets(context: Context, assetFileName: String): BookSyncResult = withContext(Dispatchers.IO) {
-        val scanResults = scanFileReader.readScanResultsFromAssets(context, assetFileName)
+        val scanResults = scanFileReader.readScanResultsFromAssetsOneString(context, assetFileName)
         return@withContext fetchBooksAndLog(scanResults)
     }
 
@@ -32,12 +32,12 @@ class BookRepositoryImpl(
         val notFoundTitles = mutableListOf<String>()
 
         for (result in scanResults) {
-            val books = googleBooksService.searchBook(result.title, result.author)
+            val books = googleBooksService.searchBook(result.titleAuthor)
             if (books.isEmpty()) {
-                Log.d("BookSync", "Aucun livre trouvé pour: ${result.title} ; ${result.author}")
-                notFoundTitles.add("${result.title} ; ${result.author}")
+                Log.d("BookSync", "Aucun livre trouvé pour: ${result.titleAuthor}")
+                notFoundTitles.add("${result.titleAuthor}")
             } else {
-                Log.d("BookSync", "${books.size} édition(s) trouvée(s) pour: ${result.title}")
+                Log.d("BookSync", "${books.size} édition(s) trouvée(s) pour: ${result.titleAuthor}")
                 books.forEachIndexed { index, book ->
                     Log.d("BookSync", "🗂️ Édition ${index + 1}")
                     Log.d("BookSync", "📘 Titre         : ${book.title}")
