@@ -26,12 +26,15 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.myapplication.ocr.BookSpineOCR
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.domain.model.Book
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
+import kotlinx.coroutines.launch
 import java.io.FileOutputStream
 
 @AndroidEntryPoint
@@ -43,6 +46,7 @@ class ScanFragment : Fragment() {
     private val viewModel: BookViewModel by viewModels()
 
     private lateinit var bookSpineDetector: BookSpineDetector
+    private lateinit var bookSpineOCR: BookSpineOCR
 
     private val cameraProviderFuture by lazy {
         ProcessCameraProvider.getInstance(requireContext())
@@ -65,6 +69,7 @@ class ScanFragment : Fragment() {
         viewModel.setContext(requireContext())
 
         bookSpineDetector = BookSpineDetector(requireContext().assets)
+        bookSpineOCR = BookSpineOCR()
 
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
@@ -110,6 +115,34 @@ class ScanFragment : Fragment() {
             }
 
             binding.previewThumbnail.setImageBitmap(boxedBitmap)
+
+            // Ajout : lancer OCR après la détection
+            lifecycleScope.launch {
+                val texts = bookSpineOCR.extractTextsFromBoxes(bitmap, boxes)
+
+                // Log de debug pour chaque tranche
+                texts.forEachIndexed { i, t ->
+                    Log.d("OCR", "Tranche $i : ${t.ifBlank { "(vide)" }}")
+                }
+
+                // On filtre les textes non vides
+                val nonEmptyTexts = texts.filter { it.isNotBlank() }
+
+                if (nonEmptyTexts.isNotEmpty()) {
+                    val message = nonEmptyTexts.mapIndexed { i, text ->
+                        "📚 Livre ${i + 1} :\n$text"
+                    }.joinToString("\n\n")
+
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Livres détectés (${nonEmptyTexts.size})")
+                        .setMessage(message)
+                        .setPositiveButton("OK", null)
+                        .show()
+                } else {
+                    Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
+                }
+            }
+
         }
     }
 
@@ -147,7 +180,7 @@ class ScanFragment : Fragment() {
         val message = """
             $duration
 
-            📘 Titre            : ${book.title}
+            📚 Titre            : ${book.title}
             👤 Auteur(s)        : ${book.authors.joinToString()}
             🏢 Éditeur          : ${book.publisher}
             📅 Date de pub.     : ${book.publishedDate}
