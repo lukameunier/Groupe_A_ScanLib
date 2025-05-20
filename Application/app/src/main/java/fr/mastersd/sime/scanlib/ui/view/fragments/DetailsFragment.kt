@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import coil.load
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
 
@@ -40,12 +41,26 @@ class DetailsFragment: Fragment() {
         }
 
         binding.bookTitle.text = book.title
-        binding.authorName.text = book.authors.toString()
-        binding.bookGenre.text
-        binding.datePublisher.text
-        binding.editor.text
-        binding.pagesNumber.text
-        binding.isbn.text
-        binding.synopsisContent.text = book.description
+        binding.authorName.text = book.authors.joinToString()
+        binding.bookGenre.text = book.categories?.joinToString() ?: "Genre inconnu"
+        binding.datePublisher.text = book.publishedDate ?: "Date inconnue"
+        binding.editor.text = book.publisher ?: "Éditeur inconnu"
+        binding.pagesNumber.text = book.pageCount.toString()
+        binding.isbn.text = book.industryIdentifiers?.joinToString() ?: "Non disponible"
+        binding.synopsisContent.text = book.description ?: "Pas de résumé disponible"
+
+        val imageView = android.widget.ImageView(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+        }
+
+        imageView.load(book.thumbnailUrl)
+
+        if (binding.cardPreviewContainer.childCount == 0) {
+            binding.cardPreviewContainer.addView(imageView)
+        }
     }
 }

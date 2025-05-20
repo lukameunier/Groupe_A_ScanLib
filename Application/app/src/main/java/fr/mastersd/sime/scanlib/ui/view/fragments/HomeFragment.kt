@@ -40,72 +40,101 @@ class HomeFragment: Fragment() {
             authors = listOf("Alexandre Dumas"),
             publisher = "Gallimard",
             publishedDate = "1844",
-            description = "Un roman d'aventure et de vengeance, suivant Edmond Dantès, injustement emprisonné, qui s'évade et cherche à se venger de ceux qui l'ont trahi.",
+            description = "Un roman d'aventure et de vengeance...",
             pageCount = 1312,
+            industryIdentifiers = listOf("ISBN-13: 9782070411245"),
+            readingModesText = true,
+            readingModesImage = true,
+            printType = "BOOK",
+            categories = listOf("Roman historique", "Aventure"),
+            averageRating = 4.8,
+            ratingsCount = 1250,
+            maturityRating = "NOT_MATURE",
+            allowAnonLogging = true,
+            contentVersion = "1.0.0.0.preview.0",
+            language = "fr",
             thumbnailUrl = "https://www.gallimard.fr/system/files/styles/medium/private/migrations/ouvrages/couvertures/A64513.jpg.webp?itok=rh5djx2y",
+            smallThumbnailUrl = null,
             previewLink = null,
             infoLink = null,
-            buyLink = null
+            canonicalVolumeLink = null,
+            country = "FR",
+            saleability = "FOR_SALE",
+            isEbook = true,
+            listPrice = 14.99,
+            retailPrice = 11.99,
+            currencyCode = "EUR",
+            buyLink = null,
+            viewability = "PARTIAL",
+            embeddable = true,
+            publicDomain = false,
+            textToSpeechPermission = "ALLOWED",
+            epubAvailable = true,
+            pdfAvailable = false,
+            webReaderLink = null,
+            accessViewStatus = "SAMPLE",
+            quoteSharingAllowed = true,
+            textSnippet = "Un extrait captivant du Comte de Monte-Cristo."
         )
 
-        val dummyBook2 = Book(
+        val dummyBook2 = dummyBook1.copy(
             id = "2",
             title = "Germinal",
-            subtitle = "Édition intégrale",
             authors = listOf("Émile Zola"),
-            publisher = "Gallimard",
             publishedDate = "1885",
-            description = "Ce roman naturaliste dépeint la vie difficile des mineurs dans le nord de la France au XIXe siècle, mettant en lumière les luttes sociales et les conditions de travail éprouvantes.",
+            description = "Ce roman naturaliste dépeint la vie difficile des mineurs...",
             pageCount = 592,
             thumbnailUrl = "https://www.gallimard.fr/system/files/styles/medium/private/migrations/ouvrages/couvertures/A66847.jpg.webp?itok=QKekMMvx",
-            previewLink = null,
-            infoLink = null,
-            buyLink = null
+            industryIdentifiers = listOf("ISBN-13: 9782070411238"),
+            categories = listOf("Roman social", "Drame"),
+            averageRating = 4.6,
+            ratingsCount = 980,
+            textSnippet = "Un passage saisissant du combat ouvrier."
         )
 
-        val dummyBook3 = Book(
+        val dummyBook3 = dummyBook1.copy(
             id = "3",
             title = "L'Assommoir",
-            subtitle = "Édition intégrale",
             authors = listOf("Émile Zola"),
-            publisher = "Gallimard",
             publishedDate = "1877",
-            description = "Ce roman explore la vie de Gervaise Macquart, une blanchisseuse à Paris, et sa descente progressive dans la pauvreté et l'alcoolisme, illustrant les effets dévastateurs de la misère urbaine.",
+            description = "Ce roman explore la vie de Gervaise Macquart...",
             pageCount = 480,
             thumbnailUrl = "https://images.epagine.fr/436/9782070411436_1_75.jpg",
-            previewLink = null,
-            infoLink = null,
-            buyLink = null
+            industryIdentifiers = listOf("ISBN-13: 9782070411436"),
+            categories = listOf("Roman naturaliste"),
+            averageRating = 4.5,
+            ratingsCount = 870,
+            textSnippet = "Un aperçu poignant de la misère parisienne."
         )
 
-        val dummyBook4 = Book(
+        val dummyBook4 = dummyBook1.copy(
             id = "4",
             title = "Quatrevingt-treize",
-            subtitle = "Édition intégrale",
             authors = listOf("Victor Hugo"),
-            publisher = "Gallimard",
             publishedDate = "1874",
-            description = "Le dernier roman de Victor Hugo, se déroulant pendant la Révolution française, explore les conflits entre révolutionnaires et royalistes, mettant en scène des personnages confrontés à des dilemmes moraux profonds.",
+            description = "Le dernier roman de Victor Hugo, pendant la Révolution française...",
             pageCount = 528,
             thumbnailUrl = "https://www.gallimard.fr/system/files/styles/medium/private/migrations/ouvrages/couvertures/A50211.jpg.webp?itok=ZtkdyoV8",
-            previewLink = null,
-            infoLink = null,
-            buyLink = null
+            industryIdentifiers = listOf("ISBN-13: 9782070411450"),
+            categories = listOf("Historique", "Politique"),
+            averageRating = 4.4,
+            ratingsCount = 740,
+            textSnippet = "Un dilemme moral au cœur de la Révolution."
         )
 
-        val dummyBook5 = Book(
+        val dummyBook5 = dummyBook1.copy(
             id = "5",
             title = "Les Misérables",
-            subtitle = "Édition intégrale",
             authors = listOf("Victor Hugo"),
-            publisher = "Gallimard",
             publishedDate = "1862",
             description = "Un roman historique et social majeur du XIXe siècle.",
             pageCount = 1463,
             thumbnailUrl = "https://www.parismuseescollections.paris.fr/sites/default/files/styles/pm_diaporama/public/atoms/images/MVH/aze_mvhperec3069.05_001.jpg?itok=uKikxBqb",
-            previewLink = null,
-            infoLink = null,
-            buyLink = null
+            industryIdentifiers = listOf("ISBN-13: 9782070411498"),
+            categories = listOf("Roman historique", "Social"),
+            averageRating = 4.9,
+            ratingsCount = 1600,
+            textSnippet = "Un destin bouleversant entre ombre et lumière."
         )
 
         val bookList = listOf(dummyBook1, dummyBook2, dummyBook3, dummyBook4, dummyBook5)
