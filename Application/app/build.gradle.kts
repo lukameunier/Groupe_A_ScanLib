@@ -5,10 +5,9 @@ plugins {
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.androidx.navigation.safeargs)
-    id("kotlin-kapt")
 }
 
-val (major, minor, patch) = "0.5.5".split(".").map { it.toInt() }
+val (major, minor, patch) = "0.5.6".split(".").map { it.toInt() }
 
 android {
     namespace = "fr.mastersd.sime.scanlib"
@@ -80,6 +79,6 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
     implementation(libs.gson)
 }
