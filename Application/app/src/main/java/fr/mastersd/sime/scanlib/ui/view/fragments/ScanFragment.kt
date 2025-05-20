@@ -149,11 +149,6 @@ class ScanFragment : Fragment() {
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
 
-        returnButton.setOnClickListener {
-            val action = ScanFragmentDirections.actionScanFragmentToHomeFragment()
-            findNavController().navigate(action)
-        }
-
         previewThumbnail.setOnClickListener {
             val images = viewModel.getAllCapturedImages()
             if (images.isEmpty()) {
