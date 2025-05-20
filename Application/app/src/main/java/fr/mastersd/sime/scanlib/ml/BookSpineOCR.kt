@@ -12,6 +12,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import androidx.core.graphics.createBitmap
 
 class BookSpineOCR {
 
@@ -22,12 +23,13 @@ class BookSpineOCR {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val results = mutableListOf<String>()
 
-        val resizedImage = Bitmap.createScaledBitmap(image, 640, 640, true)
+        val resizedImage = image.scale(640, 640)
 
         for (box in boxes) {
             try {
                 val cropped = cropBitmap(resizedImage, box)
-                val inputImage = InputImage.fromBitmap(cropped, 0)
+                val zoomedImage = cropped.scale(cropped.width * 3, cropped.height * 3)
+                val inputImage = InputImage.fromBitmap(zoomedImage, 0)
                 val resultText = recognizer.process(inputImage).await().text
                 val line = cleanTextSingleLine(resultText)
                 results.add(line)
@@ -47,7 +49,7 @@ class BookSpineOCR {
         val bottom = box.bottom.coerceAtMost(bitmap.height.toFloat()).toInt()
 
         val rect = Rect(left, top, right, bottom)
-        val cropped = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
+        val cropped = createBitmap(rect.width(), rect.height())
         val canvas = Canvas(cropped)
         canvas.drawBitmap(bitmap, -rect.left.toFloat(), -rect.top.toFloat(), null)
         return cropped
