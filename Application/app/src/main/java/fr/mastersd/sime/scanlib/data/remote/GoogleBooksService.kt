@@ -15,7 +15,7 @@ class GoogleBooksService {
     fun searchBook(titleAuthor: String): List<Book> {
         val books = mutableListOf<Book>()
         val query = "$titleAuthor"
-        val url = "https://www.googleapis.com/books/v1/volumes?q=$query" //creer la requete Google Books : https://www.googleapis.com/books/v1/volumes?q=intitle:$title+inauthor:$author
+        val url = "https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1"
         Log.d("GoogleBooksService", "Requête envoyée à: $url")
 
         val request = Request.Builder().url(url).build()
@@ -32,28 +32,25 @@ class GoogleBooksService {
         val jsonObject = gson.fromJson(body, JsonObject::class.java)
         val items = jsonObject.getAsJsonArray("items") ?: return emptyList()
 
-        for (itemElement in items) {
-            val item = itemElement.asJsonObject
-            val volumeInfo = item.getAsJsonObject("volumeInfo")
+        val item = items.firstOrNull()?.asJsonObject ?: return emptyList()
+        val volumeInfo = item.getAsJsonObject("volumeInfo")
 
-            val book = Book(
-                id = item.get("id")?.asString ?: "",
-                title = volumeInfo.get("title")?.asString ?: "",
-                subtitle = volumeInfo.get("subtitle")?.asString ?: "",
-                authors = volumeInfo.getAsJsonArray("authors")?.map { it.asString } ?: listOf(),
-                publisher = volumeInfo.get("publisher")?.asString ?: "",
-                publishedDate = volumeInfo.get("publishedDate")?.asString ?: "",
-                description = volumeInfo.get("description")?.asString ?: "",
-                pageCount = volumeInfo.get("pageCount")?.asInt ?: 0,
-                thumbnailUrl = volumeInfo.getAsJsonObject("imageLinks")?.get("thumbnail")?.asString,
-                previewLink = volumeInfo.get("previewLink")?.asString,
-                infoLink = volumeInfo.get("infoLink")?.asString,
-                buyLink = item.getAsJsonObject("saleInfo")?.get("buyLink")?.asString
-            )
+        val book = Book(
+            id = item.get("id")?.asString ?: "",
+            title = volumeInfo.get("title")?.asString ?: "",
+            subtitle = volumeInfo.get("subtitle")?.asString ?: "",
+            authors = volumeInfo.getAsJsonArray("authors")?.map { it.asString } ?: listOf(),
+            publisher = volumeInfo.get("publisher")?.asString ?: "",
+            publishedDate = volumeInfo.get("publishedDate")?.asString ?: "",
+            description = volumeInfo.get("description")?.asString ?: "",
+            pageCount = volumeInfo.get("pageCount")?.asInt ?: 0,
+            thumbnailUrl = volumeInfo.getAsJsonObject("imageLinks")?.get("thumbnail")?.asString,
+            previewLink = volumeInfo.get("previewLink")?.asString,
+            infoLink = volumeInfo.get("infoLink")?.asString,
+            buyLink = item.getAsJsonObject("saleInfo")?.get("buyLink")?.asString
+        )
 
-            books.add(book)
-        }
-
+        books.add(book)
         return books
     }
 }
