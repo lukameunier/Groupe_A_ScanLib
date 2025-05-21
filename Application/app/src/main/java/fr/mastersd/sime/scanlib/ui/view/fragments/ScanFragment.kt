@@ -119,30 +119,15 @@ class ScanFragment : Fragment() {
             // Ajout : lancer OCR après la détection
             lifecycleScope.launch {
                 val texts = bookSpineOCR.extractTextsFromBoxes(bitmap, boxes)
-
-                // Log de debug pour chaque tranche
-                texts.forEachIndexed { i, t ->
-                    Log.d("OCR", "Tranche $i : ${t.ifBlank { "(vide)" }}")
-                }
-
-                // On filtre les textes non vides
                 val nonEmptyTexts = texts.filter { it.isNotBlank() }
 
                 if (nonEmptyTexts.isNotEmpty()) {
-                    val message = nonEmptyTexts.mapIndexed { i, text ->
-                        "📚 Livre ${i + 1} :\n$text"
-                    }.joinToString("\n\n")
-
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Livres détectés (${nonEmptyTexts.size})")
-                        .setMessage(message)
-                        .setPositiveButton("OK", null)
-                        .show()
+                    syncStartTime = System.currentTimeMillis()
+                    viewModel.syncBooksFromValTexts(nonEmptyTexts)
                 } else {
                     Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
                 }
             }
-
         }
     }
 

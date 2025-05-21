@@ -17,14 +17,29 @@ class ScanFileReader {
     }
 
     // Lecture depuis assets
-    fun readScanResultsFromAssets(context: Context, assetFileName: String): List<ScanResult> {
+//    fun readScanResultsFromAssets(context: Context, assetFileName: String): List<ScanResult> {
+//        val results = mutableListOf<ScanResult>()
+//        val assetManager = context.assets
+//        assetManager.open(assetFileName).bufferedReader().useLines { lines ->
+//            lines.forEach { line ->
+//                val parts = line.split(";")
+//                if (parts.size >= 2) {
+//                    results.add(ScanResult(parts[0].trim(), parts[1].trim()))
+//                }
+//            }
+//        }
+//        Log.d("ScanFileReader", "Résultats lus : $results")
+//        return results
+//    }
+
+    fun readScanResultsFromAssetsOneString(context: Context, assetFileName: String): List<ScanResult> {
         val results = mutableListOf<ScanResult>()
         val assetManager = context.assets
         assetManager.open(assetFileName).bufferedReader().useLines { lines ->
             lines.forEach { line ->
-                val parts = line.split(";")
-                if (parts.size >= 2) {
-                    results.add(ScanResult(parts[0].trim(), parts[1].trim()))
+                val content = line.trim()
+                if (content.isNotEmpty()) {
+                    results.add(ScanResult(content)) // ou null si le second champ est nullable
                 }
             }
         }
@@ -32,11 +47,12 @@ class ScanFileReader {
         return results
     }
 
+
     // Factorisation du parsing de ligne (évite la duplication)
     private fun parseLine(line: String): ScanResult? {
-        val parts = line.split(";")
-        return if (parts.size >= 2) {
-            ScanResult(parts[0].trim(), parts[1].trim())
+        val parts = line
+        return if (parts.length >= 1) {
+            ScanResult(parts)
         } else null
     }
 }

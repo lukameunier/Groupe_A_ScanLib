@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.local.BookDatabase
 import fr.mastersd.sime.scanlib.data.local.BookEntity
+import fr.mastersd.sime.scanlib.data.remote.GoogleBooksService
 import fr.mastersd.sime.scanlib.data.repository.BookRepositoryImpl
 import fr.mastersd.sime.scanlib.domain.model.BookSyncResult
 import kotlinx.coroutines.launch
@@ -21,14 +22,20 @@ import javax.inject.Inject
 @HiltViewModel
 class BookViewModel @Inject constructor() : ViewModel() {
 
+    private lateinit var bookRepository: BookRepositoryImpl
+
     private var imageCapture: ImageCapture? = null
     private var appContext: Context? = null
 
     private val _lastImagePath = MutableLiveData<String>()
     val lastImagePath: LiveData<String> get() = _lastImagePath
 
+
     fun setContext(context: Context) {
         appContext = context.applicationContext
+        val db = BookDatabase.getDatabase(appContext!!)
+        val bookDao = db.bookDao()
+        bookRepository = BookRepositoryImpl(bookDao = bookDao)
     }
 
     fun setImageCapture(capture: ImageCapture) {
@@ -167,5 +174,13 @@ class BookViewModel @Inject constructor() : ViewModel() {
             _booksFromDb.postValue(books)
         }
     }
+
+    fun syncBooksFromValTexts(texts: List<String>) {
+        viewModelScope.launch {
+            val result = bookRepository.syncBooksFromValTexts(texts)
+            _syncResult.postValue(result)
+        }
+    }
+
 
 }
