@@ -25,6 +25,12 @@ class BookRepositoryImpl(
         val scanResults = scanFileReader.readScanResultsFromAssetsOneString(context, assetFileName)
         return@withContext fetchBooksAndLog(scanResults)
     }
+///************************Pour recuperer le texte resultant de BookSpineOCR
+    override suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
+        val scanResults = valTexts.map { ScanResult(it) }
+        return@withContext fetchBooksAndLog(scanResults)
+    }
+
 
     // Factorise la logique de fetch et logs
     private fun fetchBooksAndLog(scanResults: List<ScanResult>): BookSyncResult {

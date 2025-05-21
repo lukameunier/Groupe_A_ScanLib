@@ -85,4 +85,12 @@ class BookViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun syncBooksFromValTexts(texts: List<String>) {
+        viewModelScope.launch {
+            val result = bookRepository.syncBooksFromValTexts(texts)
+            _syncResult.postValue(result)
+        }
+    }
+
+
 }

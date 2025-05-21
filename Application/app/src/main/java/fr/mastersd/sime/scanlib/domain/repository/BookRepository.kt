@@ -7,5 +7,6 @@ import android.content.Context
 interface BookRepository {
     suspend fun syncBooksFromScanFile(filePath: String): BookSyncResult
     suspend fun syncBooksFromAssets(context: Context, assetFileName: String): BookSyncResult
+    suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult
     suspend fun getAllBooks(): List<Book>
 }
