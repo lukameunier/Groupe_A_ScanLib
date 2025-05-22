@@ -197,14 +197,20 @@ class ScanFragment : Fragment() {
     }
 
     private fun showBookListDialog(books: List<Book>, duration: String) {
+        val titledBooks = books.mapIndexed { index, book ->
+            "Livre ${index + 1} : ${book.title}"
+        }.toTypedArray()
+
         AlertDialog.Builder(requireContext())
-            .setTitle("Choisir une édition ($duration)")
-            .setItems(books.map { it.title }.toTypedArray()) { _, index ->
+            .setTitle("Livres détectés (${books.size}) – $duration")
+            .setItems(titledBooks) { _, index ->
                 showBookDetailsDialog(books[index], books, duration)
             }
             .setNegativeButton("Fermer", null)
             .show()
     }
+
+
 
     private fun checkCameraPermission() {
         when {
