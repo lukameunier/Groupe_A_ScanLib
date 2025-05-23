@@ -3,8 +3,25 @@ package fr.mastersd.sime.scanlib.data.mapper
 import fr.mastersd.sime.scanlib.data.local.BookEntity
 import fr.mastersd.sime.scanlib.domain.model.Book
 
+/**
+ * Mapper utilitaire responsable de la converstion entre les modèles de domaine [Book] et les entités de ma bd [BookEntity]
+ *
+ * Utilisé pour séparer la logique métier (domaine) et la persistance (bd): clean architecture
+ *
+ * @see Book pour la structure métier issue de l'API
+ * @see BookEntity pour la structure adaptée à Room
+ * @see BookRepositoryImpl pour son utilisation dans le flux de données
+ */
 object BookMapper {
 
+    /**
+     * Convertit un objet [Book] (modèle métier) en [BookEntity] (entité Room)
+     *
+     * A utiliser lors de stocke d'un livre récupéré depuis l'API dans la bd locale
+     *
+     * @param book Le modèle métier représentant un livre enrichi
+     * @return L'entité correspondante à persister dans Room
+     */
     fun toEntity(book: Book): BookEntity {
         return BookEntity(
             id = book.id,
@@ -51,6 +68,14 @@ object BookMapper {
         )
     }
 
+    /**
+     * Convertit une entité [BookEntity] en modèle métier [Book]
+     *
+     * A utiliser lorsqu'on lit un livre stocké localement dans la bd, pour l'afficher dans l'interface ou réutiliser dans un code
+     *
+     * @param entity L'entité stockée en bd
+     * @return Le modèle métier équivalent
+     */
     fun fromEntity(entity: BookEntity): Book {
         return Book(
             id = entity.id,

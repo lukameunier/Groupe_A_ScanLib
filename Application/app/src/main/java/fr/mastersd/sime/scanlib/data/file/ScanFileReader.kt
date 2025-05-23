@@ -5,33 +5,25 @@ import android.util.Log
 import fr.mastersd.sime.scanlib.domain.model.ScanResult
 import java.io.File
 
+/**
+ * Service de lecture de fichiers OCR au format texte
+ *
+ * Permet de charger les lignes "titreauteur" depuis les assets de l'applications
+ *
+ * Chaque ligne est transformée en objet [ScanResult]
+ */
 class ScanFileReader {
 
-    // Lecture classique depuis le stockage
-    fun readScanResults(filePath: String): List<ScanResult> {
-        val results = mutableListOf<ScanResult>()
-        File(filePath).forEachLine { line ->
-            parseLine(line)?.let { results.add(it) }
-        }
-        return results
-    }
-
-    // Lecture depuis assets
-//    fun readScanResultsFromAssets(context: Context, assetFileName: String): List<ScanResult> {
-//        val results = mutableListOf<ScanResult>()
-//        val assetManager = context.assets
-//        assetManager.open(assetFileName).bufferedReader().useLines { lines ->
-//            lines.forEach { line ->
-//                val parts = line.split(";")
-//                if (parts.size >= 2) {
-//                    results.add(ScanResult(parts[0].trim(), parts[1].trim()))
-//                }
-//            }
-//        }
-//        Log.d("ScanFileReader", "Résultats lus : $results")
-//        return results
-//    }
-
+    /**
+     * Lit un fichier stocké dans les asserts de l'app
+     * Chaque ligne non vide est trabsformée en [ScanResult]
+     *
+     * Injection des données sans accès au système de fichier
+     *
+     * @param context Contexte Android, nécessaire pour accéder aux assets
+     * @param assetFileName Nom du fichier dans le dossier 'assets/'
+     * @return Liste de résultats OCR formatés
+     */
     fun readScanResultsFromAssetsOneString(context: Context, assetFileName: String): List<ScanResult> {
         val results = mutableListOf<ScanResult>()
         val assetManager = context.assets
@@ -48,7 +40,14 @@ class ScanFileReader {
     }
 
 
-    // Factorisation du parsing de ligne (évite la duplication)
+    /**
+     * Parse une ligne de texte pour en faire un objet [ScanResult]
+     *
+     * Factorisation du parsing de ligne pour éviter la duplication
+     *
+     * @param line Ligne du fichier texte
+     * @return Objet [ScanResult] ou 'null' si la ligne est vide ou invalide
+     */
     private fun parseLine(line: String): ScanResult? {
         val parts = line
         return if (parts.length >= 1) {

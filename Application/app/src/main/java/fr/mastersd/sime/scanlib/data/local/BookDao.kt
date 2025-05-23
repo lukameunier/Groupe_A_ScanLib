@@ -1,13 +1,15 @@
 package fr.mastersd.sime.scanlib.data.local
 
 import androidx.room.*
-/*
+/**
  * Data Access Object (DAO) pour la table des livres dans Room
  *
  * Définit les opérations de base pour accéder à [BookEntity] dans la bd locale
- */
-
-
+ *
+ * @see BookDatabase pour l’accès à la base
+ * @see BookEntity pour le modèle stocké
+ * @see BookRepositoryImpl pour l’usage métier des méthodes DAO
+*/
 @Dao
 interface BookDao {
 

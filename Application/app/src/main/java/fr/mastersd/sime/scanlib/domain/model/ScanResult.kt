@@ -8,6 +8,10 @@ package fr.mastersd.sime.scanlib.domain.model
  * Ce champ est utilisé en entrée pour interroger l'API Google Books
  *
  * @property titleAuthor Texte brut détecté sans séparateur
+ *
+ * @see BookSpineOCR pour l’extraction de texte OCR
+ * @see GoogleBooksService pour l’enrichissement des résultats OCR via l’API Google
+ * @see BookSyncResult pour le résultat de la synchronisation entre OCR et données enrichies
  */
 
 data class ScanResult(
