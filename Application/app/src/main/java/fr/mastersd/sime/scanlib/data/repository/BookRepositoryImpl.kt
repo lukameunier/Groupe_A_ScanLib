@@ -12,6 +12,8 @@ import fr.mastersd.sime.scanlib.domain.model.ScanResult
 import fr.mastersd.sime.scanlib.domain.repository.BookRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import fr.mastersd.sime.scanlib.data.mapper.BookMapper
+
 
 class BookRepositoryImpl(
     private val bookDao: BookDao,
@@ -43,7 +45,7 @@ class BookRepositoryImpl(
     }
 
     // Factorise la logique de fetch et logs
-    private fun fetchBooksAndLog(scanResults: List<ScanResult>): BookSyncResult {
+    private suspend fun fetchBooksAndLog(scanResults: List<ScanResult>): BookSyncResult {
         val foundBooks = mutableListOf<Book>()
         val notFoundTitles = mutableListOf<String>()
 
@@ -62,6 +64,15 @@ class BookRepositoryImpl(
                     Log.d("BookSync", "📅 Date de pub.  : ${book.publishedDate}")
                     Log.d("BookSync", "🔗 Lien          : ${book.infoLink}")
                     Log.d("BookSync", "🖼️ Couverture    : ${book.thumbnailUrl ?: "Pas d'image disponible"}")
+
+                    // Ajout automatique dans la base locale
+                    val bookEntity = BookMapper.toEntity(book)
+                    try {
+                        bookDao.insertBooks(listOf(bookEntity))  // Sauvegarde dans Room
+                        Log.d("BookSync", "✅ Livre inséré dans Room : ${book.title}")
+                    } catch (e: Exception) {
+                        Log.e("BookSync", "❌ Erreur insertion : ${e.message}")
+                    }
                 }
                 foundBooks.addAll(books)
             }
@@ -69,5 +80,9 @@ class BookRepositoryImpl(
         return BookSyncResult(foundBooks, notFoundTitles)
     }
 
-    override suspend fun getAllBooks(): List<Book> = emptyList()
+//    override suspend fun getAllBooks(): List<Book> = emptyList()
+    override suspend fun getAllBooks(): List<Book> = withContext(Dispatchers.IO) {
+        bookDao.getAllBooks().map { BookMapper.fromEntity(it) }
+    }
+
 }

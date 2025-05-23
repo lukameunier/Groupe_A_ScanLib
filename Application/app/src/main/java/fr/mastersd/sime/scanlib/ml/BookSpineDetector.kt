@@ -15,6 +15,14 @@ import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import android.util.Size
 
+/**
+ * Détéction de tranches de livres à partir d'une image avec le modèle Tensorflow Lite préentraîné (YOLOv8)
+ *
+ * Charge le modèle, prépare l'image, exécute l'interface
+ * et applique une suppression non maximale (NMS) pour extraire les boîtes les plus pertinentes
+ *
+ * @param assetManager Fournisseur d'accés aux fichiers d'actifs pour charger le modèle
+ */
 class BookSpineDetector(assetManager: AssetManager) {
 
     private val interpreter: Interpreter
@@ -25,6 +33,13 @@ class BookSpineDetector(assetManager: AssetManager) {
         interpreter = Interpreter(model)
     }
 
+    /**
+     * Charge le modèle TensorFLow Lite depuis les assets de l'app
+     *
+     * @param assetManager Accés aux fichiers assets
+     * @param modelName Nom du fichier .tflite à charger
+     * @return Le modèle sous forme de ByteBuffer
+     */
     private fun loadModelFile(assetManager: AssetManager, modelName: String): ByteBuffer {
         val fileDescriptor = assetManager.openFd(modelName)
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
@@ -35,9 +50,15 @@ class BookSpineDetector(assetManager: AssetManager) {
     }
 
     /**
-     * Retourne les boîtes détectées et la taille du bitmap redimensionné
+     * Exécute la détection de tranches de livre sur l'image donnée
+     *
+     * @param bitmap Image source à analyser
+     * @return Une paire de :
+     * - Une liste de boîtes qui engloube (RectF) des tranches détectées après NMS (boîtes détectées)
+     * - la taille du bitmap redimensionnée
      */
     fun detect(bitmap: Bitmap): Pair<List<RectF>, Size> {
+        //prétraitement image et buffer
         val resized = bitmap.scale(inputSize, inputSize)
         val inputBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
             .order(ByteOrder.nativeOrder())

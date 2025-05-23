@@ -14,6 +14,7 @@ import fr.mastersd.sime.scanlib.data.local.BookDatabase
 import fr.mastersd.sime.scanlib.data.local.BookEntity
 import fr.mastersd.sime.scanlib.data.remote.GoogleBooksService
 import fr.mastersd.sime.scanlib.data.repository.BookRepositoryImpl
+import fr.mastersd.sime.scanlib.domain.model.Book
 import fr.mastersd.sime.scanlib.domain.model.BookSyncResult
 import kotlinx.coroutines.launch
 import java.io.File
@@ -100,6 +101,7 @@ class BookViewModel @Inject constructor() : ViewModel() {
     //-------------------------
     // TEST INSERTION MANUELLE
     //-------------------------
+   /*
     fun insertSampleBook(context: Context) {
         viewModelScope.launch {
             val db = BookDatabase.getDatabase(context)
@@ -152,7 +154,7 @@ class BookViewModel @Inject constructor() : ViewModel() {
             repo.insertBook(book)
             Log.d("BOOK_INSERT", "✅ Livre inséré : ${book.title}")
         }
-    }
+   }
 
     fun getAllBooks(context: Context) {
         viewModelScope.launch {
@@ -163,7 +165,7 @@ class BookViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
-
+    */
     private val _booksFromDb = MutableLiveData<List<BookEntity>>()
     val booksFromDb: LiveData<List<BookEntity>> get() = _booksFromDb
 
@@ -179,6 +181,20 @@ class BookViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             val result = bookRepository.syncBooksFromValTexts(texts)
             _syncResult.postValue(result)
+        }
+    }
+
+/************ ROOM DB  ******************/
+private val _allBooks = MutableLiveData<List<Book>>()
+    val allBooks: LiveData<List<Book>> get() = _allBooks
+
+    fun loadBooksFromDb(context: Context) {
+        viewModelScope.launch {
+            val db = BookDatabase.getDatabase(context)
+            val bookDao = db.bookDao()
+            val repo = BookRepositoryImpl(bookDao)
+            val books = repo.getAllBooks()
+            _allBooks.postValue(books)
         }
     }
 
