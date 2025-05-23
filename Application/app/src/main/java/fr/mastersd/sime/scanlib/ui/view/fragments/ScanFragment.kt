@@ -140,6 +140,7 @@ class ScanFragment : Fragment() {
                 Toast.makeText(requireContext(), "Aucune image capturée", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
             AlertDialog.Builder(requireContext())
                 .setTitle("Images capturées")
                 .setItems(images.map { it.name }.toTypedArray()) { _, index ->
@@ -154,7 +155,45 @@ class ScanFragment : Fragment() {
         tempButton.setOnClickListener {
 
          syncStartTime = System.currentTimeMillis()
-         viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
+//         viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
+
+            // Charger les livres en base locale
+            viewModel.loadBooksFromDb(requireContext())
+
+            // Observer et afficher les résultats
+            viewModel.allBooks.observe(viewLifecycleOwner) { books ->
+                val duration = System.currentTimeMillis() - syncStartTime
+                if (books.isEmpty()) {
+                    Toast.makeText(requireContext(), "📂 Aucun livre trouvé dans la base locale", Toast.LENGTH_SHORT).show()
+                } else {
+                    val bookTitles = books.mapIndexed { index, book ->
+                        "📘 ${index + 1}. ${book.title}"
+                    }.toTypedArray()
+
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Livres en base locale (${books.size}) – ${duration}ms")
+                        .setItems(bookTitles) { _, index ->
+                            val book = books[index]
+                            val details = """
+                        📚 Titre            : ${book.title}
+                        👤 Auteur(s)        : ${book.authors.joinToString()}
+                        🏢 Éditeur          : ${book.publisher}
+                        📅 Date de pub.     : ${book.publishedDate}
+                        📄 Pages            : ${book.pageCount}
+                        🔗 Lien             : ${book.infoLink ?: "N/A"}
+                    """.trimIndent()
+
+                            AlertDialog.Builder(requireContext())
+                                .setTitle("Détails du livre")
+                                .setMessage(details)
+                                .setPositiveButton("Fermer", null)
+                                .show()
+                        }
+                        .setNegativeButton("Fermer", null)
+                        .show()
+                }
+            }
+
 
         //-----------------------------
         //INSERTION D'UN LIVRE MANUEL
