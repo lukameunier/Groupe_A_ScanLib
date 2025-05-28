@@ -56,18 +56,18 @@ class GoogleBooksService @Inject constructor() {
                 authors = volumeInfo.getAsJsonArray("authors")?.map { it.asString } ?: emptyList(),
                 publisher = volumeInfo.get("publisher")?.asString,
                 publishedDate = volumeInfo.get("publishedDate")?.asString,
-                previewLink = null,
+                previewLink = volumeInfo.get("previewLink")?.asString,
                 infoLink = volumeInfo.get("infoLink")?.asString,
                 thumbnailUrl = imageLinks.get("thumbnail")?.asString,
-                description = null,
-                pageCount = 0,
+                description = volumeInfo.get("description")?.asString,
+                pageCount = volumeInfo.get("pageCount").asInt,
                 industryIdentifiers = emptyList(),
                 categories = emptyList(),
-                averageRating = null,
-                ratingsCount = null,
-                smallThumbnailUrl = null,
-                country = null,
-                textSnippet = null
+                averageRating = volumeInfo.get("averageRating")?.asDouble,
+                ratingsCount = volumeInfo.get("ratingsCount")?.asInt,
+                smallThumbnailUrl = volumeInfo.get("smallThumbnailUrl")?.asString,
+                country = volumeInfo.get("country")?.asString,
+                textSnippet = volumeInfo.get("textSnippet")?.asString
             )
 
         } catch (e: Exception) {
