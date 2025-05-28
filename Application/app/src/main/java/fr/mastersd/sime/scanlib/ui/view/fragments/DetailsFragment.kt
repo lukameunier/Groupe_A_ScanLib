@@ -11,11 +11,27 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
 import androidx.core.view.isEmpty
 
+/**
+ * Fragment d’affichage détaillé d’un livre, après la détection et la synchronisation réussie
+ *
+ * Récupère l’objet [Book] et remplit l’interface avec ses champs
+ *
+ * @see model.Book pour le modèle affiché
+ * @see ScanFragment pour le fragment qui déclenche cette vue de détails
+ */
 @AndroidEntryPoint
-class DetailsFragment: Fragment() {
+class DetailsFragment : Fragment() {
 
     private lateinit var binding: FragmentDetailsBinding
 
+    /**
+     * Gonfle le layout XML avec ViewBinding
+     *
+     * @param inflater Inflater standard de fragments
+     * @param container Vue parente
+     * @param savedInstanceState État sauvegardé si recréation
+     * @return Vue racine de l’interface
+     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -25,6 +41,12 @@ class DetailsFragment: Fragment() {
         return binding.root
     }
 
+    /**
+     * Récupère les données du livre via Safe Args et remplit tous les champs de l’interface
+     *
+     * @param view Vue initialisée
+     * @param savedInstanceState État restauré si recréation
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -55,3 +77,5 @@ class DetailsFragment: Fragment() {
         }
     }
 }
+
+

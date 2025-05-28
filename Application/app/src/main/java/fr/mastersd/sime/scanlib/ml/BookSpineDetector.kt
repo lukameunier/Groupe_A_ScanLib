@@ -16,17 +16,18 @@ import androidx.core.graphics.scale
 import android.util.Size
 
 /**
- * Détéction de tranches de livres à partir d'une image avec le modèle Tensorflow Lite préentraîné (YOLOv8)
+ * Détéction de tranches de livres sur une image, basé sur le modèle YOLOv8 converti en Tensorflow Lite
  *
- * Charge le modèle, prépare l'image, exécute l'interface
- * et applique une suppression non maximale (NMS) pour extraire les boîtes les plus pertinentes
+ * Charge le modèle, prépare l'image, exécute l'interface et applique NMS pour isoler les tranches
  *
- * @param assetManager Fournisseur d'accés aux fichiers d'actifs pour charger le modèle
+ * Fournit les coordonnées des boîtes à passer à l'OCR
+ *
+ * @param assetManager Gestionnaire d'assets Android pour accéder au modèle embarqué
  */
 class BookSpineDetector(assetManager: AssetManager) {
 
     private val interpreter: Interpreter
-    private val inputSize = 640  // Taille d'entrée du modèle YOLOv8
+    private val inputSize = 640
 
     init {
         val model = loadModelFile(assetManager, "best-v1.tflite")
@@ -34,7 +35,7 @@ class BookSpineDetector(assetManager: AssetManager) {
     }
 
     /**
-     * Charge le modèle TensorFLow Lite depuis les assets de l'app
+     * Charge le modèle TFLite depuis les assets, pas de dépendance réseau
      *
      * @param assetManager Accés aux fichiers assets
      * @param modelName Nom du fichier .tflite à charger
@@ -50,12 +51,12 @@ class BookSpineDetector(assetManager: AssetManager) {
     }
 
     /**
-     * Exécute la détection de tranches de livre sur l'image donnée
+     * Détecte les tranches de livre sur l'image donnée, cible les zones à analyser en OCR
      *
      * @param bitmap Image source à analyser
      * @return Une paire de :
-     * - Une liste de boîtes qui engloube (RectF) des tranches détectées après NMS (boîtes détectées)
-     * - la taille du bitmap redimensionnée
+     * - liste de boîtes filtrées englobant (RectF) des tranches après NMS
+     * - taille du bitmap redimensionnée
      */
     fun detect(bitmap: Bitmap): Pair<List<RectF>, Size> {
         //prétraitement image et buffer
@@ -75,6 +76,7 @@ class BookSpineDetector(assetManager: AssetManager) {
             }
         }
 
+        //inference
         val output = Array(1) { Array(5) { FloatArray(8400) } }
         interpreter.run(inputBuffer, output)
 
@@ -85,6 +87,7 @@ class BookSpineDetector(assetManager: AssetManager) {
             }
         }
 
+        //post-traitement
         val threshold = 0.25f
         val nmsThreshold = 0.50f
         val boxesXYXY = mutableListOf<RectF>()
@@ -108,17 +111,16 @@ class BookSpineDetector(assetManager: AssetManager) {
         }
 
         val nmsBoxes = nonMaxSuppression(boxesXYXY, scores, 0.5f, nmsThreshold, 50)
-
-        Log.d("BookSpineDetector", "Boxes detected above threshold: ${boxesXYXY.size}")
-        Log.d("BookSpineDetector", "Boxes kept after NMS: ${nmsBoxes.size}")
-
-        nmsBoxes.take(5).forEachIndexed { i, box ->
-            Log.d("BookSpineDetector", "Box[$i] = left=${box.left}, top=${box.top}, right=${box.right}, bottom=${box.bottom}")
-        }
-
         return Pair(nmsBoxes, Size(inputSize, inputSize))
     }
 
+    /**
+     * Calcule l'IoU (Intersection over Union) entre deux boîtes, pour déterminer le degré de chevauchement entre deux détections
+     *
+     * @param a 1e boîte
+     * @param b 2e boîte
+     * @return Valeur de l’IoU entre 0 et 1
+     */
     private fun computeIoU(a: RectF, b: RectF): Float {
         val interLeft = max(a.left, b.left)
         val interTop = max(a.top, b.top)
@@ -131,6 +133,16 @@ class BookSpineDetector(assetManager: AssetManager) {
         return if (union > 0f) interArea / union else 0f
     }
 
+    /**
+     * Supprime les détections redondantes à l’aide d’une NMS (suppression non maximale), pour garder uniquement les détections ayant le meilleur score
+     *
+     * @param boxes Boîtes englobantes détectées
+     * @param scores Scores de confiance associés aux boîtes
+     * @param iouThreshold Seuil d'IoU pour la suppression
+     * @param scoreThreshold Score minimal à conserver
+     * @param maxOutputSize Nombre maximum de boîtes retournées
+     * @return Liste filtrée de boîtes englobantes après NMS
+     */
     private fun nonMaxSuppression(
         boxes: List<RectF>,
         scores: List<Float>,

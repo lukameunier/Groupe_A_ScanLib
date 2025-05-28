@@ -9,7 +9,7 @@ import androidx.room.*
  * @see BookDatabase pour l’accès à la base
  * @see BookEntity pour le modèle stocké
  * @see BookRepositoryImpl pour l’usage métier des méthodes DAO
-*/
+ */
 @Dao
 interface BookDao {
 
@@ -39,10 +39,14 @@ interface BookDao {
     @Query("DELETE FROM books")
     suspend fun clearAll()
 
-    //==================================================================================
-    //==================================================================================
-    // méthode de mise à jour partielle @Update --> Modifications du user
-    // suppression ciblée @Delete --> Supression par user
-    //==================================================================================
-    //==================================================================================
+    //=====================================================================================================================================================
+    //=====================================================================================================================================================
+    // !: mise à jour individuelle [@Update] ---> updateBook
+    // !: suppression ciblée [@Delete] ---> deleteById, deleteAllBut
+    // !: chercher par title, author ---> mot-clé
+    // !: trier par genre, rating, date ---> getBooksByGenre, getBooksByScore, getBooksByDate => appliquer les filtres dans Repository, les appeler dans VM
+    // ?: trier les livres par date d'ajout ---> add un champ dateAjout à [BookEntity] + getAllBooksByDate
+    // ?: tests unitaires ---> peut être
+    //======================================================================================================================================================
+    //======================================================================================================================================================
 }

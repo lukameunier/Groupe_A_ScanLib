@@ -14,15 +14,25 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import androidx.core.graphics.createBitmap
 
+/**
+ * Service d'OCR appliqué aux tranches de livres détectées
+ *
+ * Utilise Google MLKit pour détecter, nettoyer les lignes de texte dans les régions détectées
+ *
+ * Transforme les régions détectées en chaînes de texte pour des requêtes API
+ */
 class BookSpineOCR {
 
-    suspend fun extractTextsFromBoxes(
-        image: Bitmap,
-        boxes: List<RectF>
-    ): List<String> = withContext(Dispatchers.Default) {
+    /**
+     * Extrait et nettoie les textes OCR à chaque boîte (liste de régions), pour récupérer une ligne lisible de type "titre auteur" par tranche
+     *
+     * @param image L’image source (bitmap) des tranches
+     * @param boxes Les régions (RectF, extrait de YOLO) à traiter par OCR
+     * @return Liste des chaînes de texte nettoyées de chaque boîte
+     */
+    suspend fun extractTextsFromBoxes(image: Bitmap, boxes: List<RectF>): List<String> = withContext(Dispatchers.Default) {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val results = mutableListOf<String>()
-
         val resizedImage = image.scale(640, 640)
 
         for (box in boxes) {
@@ -42,6 +52,13 @@ class BookSpineOCR {
         return@withContext results
     }
 
+    /**
+     * Découpe une sous-image en fonction de la boîte donnée, pour zoomer et isoler la zone à analyser
+     *
+     * @param bitmap Image source
+     * @param box Région à extraire
+     * @return Image bitmap correspondant à la sous-région
+     */
     private fun cropBitmap(bitmap: Bitmap, box: RectF): Bitmap {
         val left = box.left.coerceAtLeast(0f).toInt()
         val top = box.top.coerceAtLeast(0f).toInt()
@@ -55,14 +72,21 @@ class BookSpineOCR {
         return cropped
     }
 
+    /**
+     * Nettoie le texte OCR pour en faire une ligne lisible, pour la requête API
+     *
+     * Supprime les lignes numériques, normalise les espaces et concatène tout en une ligne
+     *
+     * @param rawText Texte brut de l'OCR
+     * @return Chaîne nettoyée et formatée
+     */
     private fun cleanTextSingleLine(rawText: String): String {
         return rawText
             .lines()
             .map { it.trim() }
-            .filter { it.isNotEmpty() && !it.matches(Regex("^\\d+$")) } // supprime toutes les lignes numériques
+            .filter { it.isNotEmpty() && !it.matches(Regex("^\\d+$")) }
             .joinToString(" ")
             .replace(Regex("\\s+"), " ")
             .trim()
     }
-
 }

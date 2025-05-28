@@ -12,11 +12,27 @@ import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.domain.model.Book
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
 
+/**
+ * Fragment d’accueil de l’app
+ *
+ * Affiche une galerie de livres sous forme de grille en utilisant [BookAdapter] avec RecyclerView
+ *
+ * @see ScanFragment pour accéder au scan OCR et API
+ * @see DetailsFragment pour afficher les métadonnées d’un livre
+ */
 @AndroidEntryPoint
-class HomeFragment: Fragment() {
+class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
 
+    /**
+     * Initialise la vue du fragment avec ViewBinding
+     *
+     * @param inflater Utilisé pour gonfler le layout
+     * @param container Vue parente
+     * @param savedInstanceState État précédemment sauvegardé
+     * @return La vue racine du fragment
+     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -26,13 +42,22 @@ class HomeFragment: Fragment() {
         return binding.root
     }
 
+    /**
+     * Configure les interactions (actions de nav) et affiche leslivres fictifs
+     *
+     * @param view Vue créée
+     * @param savedInstanceState État sauvegardé
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.addBookButton.setOnClickListener{
+
+        //navigation vers [ScanFragment]
+        binding.addBookButton.setOnClickListener {
             val action = HomeFragmentDirections.actionHomeFragmentToScanFragment()
             findNavController().navigate(action)
         }
 
+        //créer une liste fictive de livres
         val dummyBook1 = Book(
             id = "1",
             title = "Le Comte de Monte-Cristo",
@@ -137,14 +162,26 @@ class HomeFragment: Fragment() {
             textSnippet = "Un destin bouleversant entre ombre et lumière."
         )
 
+        //regrouper dans une liste pour affichage
         val bookList = listOf(dummyBook1, dummyBook2, dummyBook3, dummyBook4, dummyBook5)
 
+
+        //intialiser l'adaptatuer avec gestion de clic vers [DetailsFragment]
         val adapter = BookAdapter(bookList) { selectedBook ->
             val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(selectedBook)
             findNavController().navigate(action)
         }
 
+        //mise en place de la RecyclerView en grille de 3 colonnes
         binding.bookRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.bookRecyclerView.adapter = adapter
     }
+
+
+//================================================================================
+//================================================================================
+// !: remplacer les livres fictifs avec les livres de la bd ---> IMPORTANT
+//================================================================================
+//================================================================================
+
 }

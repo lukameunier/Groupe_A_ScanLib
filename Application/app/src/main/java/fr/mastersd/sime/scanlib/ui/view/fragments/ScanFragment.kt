@@ -37,9 +37,16 @@ import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
 
+/**
+ * Fragment responsable de la capture d'image, de la détection de tranches de livres, de l'extraction OCR, interrogation del'API Google Books via viewmodel
+ *
+ * @see BookViewModel pour la logique de synchronisation
+ * @see BookSpineDetector pour la détection YOLO des tranches
+ * @see BookSpineOCR pour l'OCR basé sur MLKit
+ */
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
-
+    /* ----- initialisation ----- */
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
 
@@ -54,16 +61,30 @@ class ScanFragment : Fragment() {
 
     private var syncStartTime: Long = 0L
 
+    /**
+     * Lance la demande de permission pour la caméra
+     */
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startCamera() else handleCameraDenied()
         }
 
+    /**
+     * Initialise la vue du fragment avec ViewBinding
+     *
+     * @return La vue racine du fragment
+     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScanBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    /**
+     * Configure observers, caméra et listeners lors de la création de la vue
+     *
+     * @param view La vue créée
+     * @param savedInstanceState État sauvegardé, s'il existe
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
@@ -71,6 +92,7 @@ class ScanFragment : Fragment() {
         bookSpineDetector = BookSpineDetector(requireContext().assets)
         bookSpineOCR = BookSpineOCR()
 
+        //observe les résultats de la synchronisation API Google Books
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             val timeString = "️${duration} ms"
@@ -98,6 +120,9 @@ class ScanFragment : Fragment() {
         _binding = null
     }
 
+    /**
+     * Observe le chemin de l’image capturée, applique détection + OCR
+     */
     private fun setupObservers() {
         viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
             val bitmap = getRotatedBitmap(path)
@@ -116,7 +141,7 @@ class ScanFragment : Fragment() {
 
             binding.previewThumbnail.setImageBitmap(boxedBitmap)
 
-            // Ajout : lancer OCR après la détection
+            // OCR des zones détectées
             lifecycleScope.launch {
                 val texts = bookSpineOCR.extractTextsFromBoxes(bitmap, boxes)
                 val nonEmptyTexts = texts.filter { it.isNotBlank() }
@@ -131,6 +156,9 @@ class ScanFragment : Fragment() {
         }
     }
 
+    /**
+     * Configure les boutons de capture et aperçu miniature (actions user)
+     */
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
 
@@ -151,16 +179,15 @@ class ScanFragment : Fragment() {
                 .show()
         }
 
-        //Bouton temporaire pour test manuel Room
+        //bouton pour afficher les livres de la bd
         tempButton.setOnClickListener {
+            syncStartTime = System.currentTimeMillis()
+//         viewModel.syncBooksFromAssets(requireContext(), "scan.txt") ---> A SUPPRIMER SAUF TEST
 
-         syncStartTime = System.currentTimeMillis()
-//         viewModel.syncBooksFromAssets(requireContext(), "scan.txt")
-
-            // Charger les livres en base locale
+            //charger les livres en base locale
             viewModel.loadBooksFromDb(requireContext())
 
-            // Observer et afficher les résultats
+            //observer et afficher les résultats
             viewModel.allBooks.observe(viewLifecycleOwner) { books ->
                 val duration = System.currentTimeMillis() - syncStartTime
                 if (books.isEmpty()) {
@@ -194,23 +221,31 @@ class ScanFragment : Fragment() {
                 }
             }
 
+            //!: A SUPPRIMER
+            //-----------------------------
+            //INSERTION D'UN LIVRE MANUEL
+            //------------------------------
+            /* A decommenter si envie de tester
+                viewModel.insertSampleBook(requireContext())
+                viewModel.getAllBooks(requireContext())
+                viewModel.fetchBooksFromDb(requireContext())
+                viewModel.booksFromDb.observe(viewLifecycleOwner) { books ->
+                    books.forEach {
+                        Toast.makeText(requireContext(), "📘 ${it.title}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+        */
 
-        //-----------------------------
-        //INSERTION D'UN LIVRE MANUEL
-        //------------------------------
-        /* A decommenter si envie de tester 
-        viewModel.insertSampleBook(requireContext())
-        viewModel.getAllBooks(requireContext())
-        viewModel.fetchBooksFromDb(requireContext())
-        viewModel.booksFromDb.observe(viewLifecycleOwner) { books ->
-            books.forEach {
-                Toast.makeText(requireContext(), "📘 ${it.title}", Toast.LENGTH_SHORT).show()
-            }
         }
-         */
     }
-}
 
+    /**
+     * Affiche une boîte de dialogue avec les détails d’un livre enrichi
+     *
+     * @param book Livre principal à afficher
+     * @param allBooks Liste complète des livres détectés
+     * @param duration Temps de traitement à afficher dans la UI
+     */
     private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
         val message = """
             $duration
@@ -235,6 +270,12 @@ class ScanFragment : Fragment() {
             .show()
     }
 
+    /**
+     * Affiche une liste de livres détectés, permet de sélectionner un livre pour les détails
+     *
+     * @param books Liste des livres détectés
+     * @param duration Temps de traitement total
+     */
     private fun showBookListDialog(books: List<Book>, duration: String) {
         val titledBooks = books.mapIndexed { index, book ->
             "Livre ${index + 1} : ${book.title}"
@@ -250,7 +291,9 @@ class ScanFragment : Fragment() {
     }
 
 
-
+    /**
+     * Vérifie et demande la permission d’accès à la caméra
+     */
     private fun checkCameraPermission() {
         when {
             ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> startCamera()
@@ -268,6 +311,9 @@ class ScanFragment : Fragment() {
         }
     }
 
+    /**
+     * Démarre la caméra avec CameraX (preview + capture)
+     */
     private fun startCamera() {
         cameraProviderFuture.addListener({
             val provider = cameraProviderFuture.get()
@@ -296,6 +342,12 @@ class ScanFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
+    /**
+     * Corrige l’orientation d’une image à partir des métadonnées EXIF
+     *
+     * @param path Chemin du fichier image
+     * @return Bitmap correctement orienté
+     */
     private fun getRotatedBitmap(path: String): Bitmap {
         val bmp = BitmapFactory.decodeFile(path)
         val exif = ExifInterface(path)
@@ -310,11 +362,22 @@ class ScanFragment : Fragment() {
         return Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
     }
 
+    /**
+     * Affiche un toast si la permission caméra est refusée
+     */
     private fun handleCameraDenied() {
         Toast.makeText(requireContext(), "Permission caméra refusée", Toast.LENGTH_SHORT).show()
         findNavController().navigateUp()
     }
 
+    /**
+     * Dessine les boîtes de détection sur une image bitmap
+     *
+     * @param base Image d’origine
+     * @param boxes Coordonnées des boîtes à dessiner
+     * @param inputSize Taille utilisée par le modèle de détection
+     * @return Bitmap annoté avec les boîtes
+     */
     private fun drawBoxesOnBitmap(base: Bitmap, boxes: List<RectF>, inputSize: Size): Bitmap {
         val output = base.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(output)
@@ -341,4 +404,14 @@ class ScanFragment : Fragment() {
 
         return output
     }
+
+//================================================================================
+//================================================================================
+// !: eliminer les doublants avec vm => déplacer le logique de lecture ocr et detection dans vm pour isoler l'affichage et la capture ---> temps de traitement ?
+// !: injection via Hilt pour les appels à la bd
+// ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
+//================================================================================
+//================================================================================
+
+
 }
