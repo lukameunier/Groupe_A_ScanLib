@@ -1,0 +1,58 @@
+package fr.mastersd.sime.scanlib.data
+
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+
+class BookRepository @Inject constructor(
+    private val bookDao: BookDao,
+    val googleBooksService: GoogleBooksService = GoogleBooksService()
+) {
+
+    suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
+        val scanResults = valTexts.map { ScanResult(it) }
+        return@withContext fetchBooksAndLog(scanResults)
+    }
+
+    suspend fun insertBook(book: Book) {
+        bookDao.insertBooks(listOf(book))
+    }
+
+    private suspend fun fetchBooksAndLog(scanResults: List<ScanResult>): BookSyncResult {
+        val foundBooks = mutableListOf<Book>()
+        val notFoundTitles = mutableListOf<String>()
+
+        for (result in scanResults) {
+            val book = googleBooksService.searchBook(result.titleAuthor)
+
+            if (book == null) {
+                Log.d("BookSync", "❌ Aucun livre trouvé pour : ${result.titleAuthor}")
+                notFoundTitles.add(result.titleAuthor)
+            } else {
+                Log.d("BookSync", "✅ Livre trouvé pour : ${result.titleAuthor}")
+                Log.d("BookSync", "📘 Titre         : ${book.title}")
+                Log.d("BookSync", "👤 Auteur(s)     : ${book.authors.joinToString()}")
+                Log.d("BookSync", "🏢 Éditeur       : ${book.publisher}")
+                Log.d("BookSync", "📅 Date de pub.  : ${book.publishedDate}")
+                Log.d("BookSync", "🔗 Lien          : ${book.infoLink}")
+                Log.d("BookSync", "🖼️ Couverture    : ${book.thumbnailUrl ?: "Pas d'image disponible"}")
+
+                try {
+                    bookDao.insertBooks(listOf(book))
+                    Log.d("BookSync", "💾 Livre inséré dans Room : ${book.title}")
+                } catch (e: Exception) {
+                    Log.e("BookSync", "❌ Erreur lors de l'insertion : ${e.message}")
+                }
+
+                foundBooks.add(book)
+            }
+        }
+
+        return BookSyncResult(foundBooks, notFoundTitles)
+    }
+
+    suspend fun getAllBooks(): List<Book> = withContext(Dispatchers.IO) {
+        bookDao.getAllBooks()
+    }
+}

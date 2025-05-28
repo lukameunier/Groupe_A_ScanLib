@@ -1,4 +1,4 @@
-package fr.mastersd.sime.scanlib.data.local
+package fr.mastersd.sime.scanlib.data
 
 import androidx.room.TypeConverter
 
@@ -9,7 +9,7 @@ import androidx.room.TypeConverter
  *
  * ! A évaluer : peut être retirée si les champs ne sont plus nécessaires
  */
-class Converters {
+class BookConverters {
 
     @TypeConverter
     fun fromString(value: String?): List<String> {

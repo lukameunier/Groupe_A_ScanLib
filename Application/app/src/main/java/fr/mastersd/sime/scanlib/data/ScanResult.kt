@@ -1,4 +1,4 @@
-package fr.mastersd.sime.scanlib.domain.model
+package fr.mastersd.sime.scanlib.data
 
 /**
  * Représente un résultat de l'OCR sur une trenche de livre.
