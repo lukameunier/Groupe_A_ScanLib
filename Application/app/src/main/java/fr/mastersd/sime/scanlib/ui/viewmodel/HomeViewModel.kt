@@ -15,12 +15,22 @@ class HomeViewModel @Inject constructor(
     private val bookRepository: BookRepository
 ) : ViewModel() {
 
+    // Donnée privée modifiable
     private val _books = MutableLiveData<List<Book>>()
-    val books: LiveData<List<Book>> = _books
 
+    // Donnée publique observable (pour le Fragment)
+    val books: LiveData<List<Book>> get() = _books
+
+    // Chargement des livres au lancement du ViewModel
+    init {
+        loadBooks()
+    }
+
+    // Fonction pour charger (ou recharger) la liste des livres
     fun loadBooks() {
         viewModelScope.launch {
-            _books.value = bookRepository.getAllBooks()
+            val list = bookRepository.getAllBooks()
+            _books.postValue(list) // postValue pour éviter les bugs si appelé hors du thread UI
         }
     }
 }
