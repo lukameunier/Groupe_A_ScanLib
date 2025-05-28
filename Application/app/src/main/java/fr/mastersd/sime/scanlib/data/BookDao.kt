@@ -11,66 +11,81 @@ import org.tensorflow.lite.support.label.Category
  * @see BookDatabase pour l’accès à la base
  * @see BookEntity pour le modèle stocké
  * @see BookRepository pour l’usage métier des méthodes DAO
-*/
+ */
 @Dao
 interface BookDao {
 
+    /* Opérations de base */
     /**
-      * Insère une liste de livre dans la bd locale, remplace un livre existant
-      *
-      * @param books Liste de livres à insérer
+     * Insère une liste de livre dans la bd locale, remplace un livre existant
+     *
+     * @param books Liste de livres à insérer
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBooks(books: List<Book>)
 
-
     /**
-      * Récupère tous les livres stockés localement
-      *
-      * @return Une liste de tous les livres de la bd
+     * Récupère tous les livres stockés localement
+     *
+     * @return Une liste de tous les livres de la bd
      */
     @Query("SELECT * FROM books")
     suspend fun getAllBooks(): List<Book>
 
-
     /**
-      * Supprime tous les livres
-      *
-      * Utilisé lors des réinitialisations ou syschronisations
+     * Supprime tous les livres
+     *
+     * Utilisé lors des réinitialisations ou syschronisations
      */
     @Query("DELETE FROM books")
     suspend fun clearAll()
 
-
+    //==================================================================================================================//
     /* Filtrages */
+
     /**
-     * Filtre par catégorie et genre
+     * Filtre par catégorie
      *
+     * @param category Catégorie selctionnée
      * @return Liste de livres de la catégorie selectionnée
      */
     @Query("SELECT * FROM books WHERE categories LIKE '%' || :category || '%'")
     suspend fun getBooksByCategory(category: String): List<Book>
 
-
     /**
-     * Filtre par score (note moyenne)
+     * Filtre par score
      *
-     * @return Liste de livre ayant un score suppérieur OU égale au score selectionné
+     * @param minScore Note Moyenne selectionné
+     * @return Liste de livre ayant un score suppérieur ou égale au score selectionné
      */
     @Query("SELECT * FROM books WHERE averageRating >= :minScore")
     suspend fun getBooksByMinimumScore(minScore: Double): List<Book>
 
+    /**
+     * Filtre par année d'édition
+     *
+     * @param pubDate Date de publication selctionnée
+     * @returnLiset de livre de l'année d'édition
+     */
+    @Query("SELECT * FROM books WHERE publishedDate = :pubDate")
+    suspend fun getBooksByPublishedDate(pubDate: String): List<Book>
 
+    /**
+     * Filtre par année d'ajout ?
+     */
+
+    //==================================================================================================================//
     /**
      * Recherche par mot-clé: titre ou auteur
      *
+     * @param keyword Mot-clé tappé dans la barre de recherche
      * @return Liste de livre qui correspondent au mot-clé
      */
     @Query("SELECT * FROM books WHERE title LIKE '%' || :keyword || '%' OR authors LIKE '%' || :keyword || '%'")
     suspend fun getBooksByKeyword(keyword: String): List<Book>
 
+    //==================================================================================================================//
     /* Mise à Jour ciblée */
-    //
     /**
      * Mise à jour des champs d'un livre
      *
@@ -81,14 +96,24 @@ interface BookDao {
     @Update
     suspend fun updateBook(book: Book)
 
-
+    //==================================================================================================================//
     /* Suppression ciblée */
     /**
      * Suppression d'un livre basé sur son id
+     *
+     * @param bookId Id de base du livre (récupéré de l'API)
      */
     @Query("DELETE FROM books WHERE id = :bookId")
     suspend fun deleteBookById(bookId: String)
 
+    /**
+     * Récupèrer toutes les catégories de la bd
+     * DISTINCT ne marche pas car List<String>
+     *
+     * @return Liste de catégories
+     */
+    @Query("SELECT DISTINCT categories FROM books")
+    suspend fun getAllCategories(): List<String>
 
     //==================================================================================
     //==================================================================================
