@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
-/*
+/**
  * Modèle métier d'un livre récupéré via API Google Books
  *
  * Utilisée pour manipuler les data livre indépendament de la bd locale

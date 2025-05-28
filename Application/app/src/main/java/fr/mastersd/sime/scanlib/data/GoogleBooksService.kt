@@ -24,7 +24,9 @@ class GoogleBooksService @Inject constructor() {
         try {
             val encodedQuery = URLEncoder.encode(titleAuthor, "UTF-8")
             val url = "https://www.googleapis.com/books/v1/volumes?q=$encodedQuery&maxResults=1" +
-                    "&fields=items(id,volumeInfo(title,authors,publisher,publishedDate,infoLink,imageLinks/thumbnail))"
+                    "&fields=items(id,volumeInfo(title,authors,publisher,publishedDate,pageCount,description," +
+                    "industryIdentifiers,categories,averageRating,ratingsCount,infoLink,previewLink," +
+                    "imageLinks/thumbnail,imageLinks/smallThumbnail),accessInfo/country,searchInfo/textSnippet)"
 
             Log.d("GoogleBooksService", "Requête envoyée à: $url")
 
@@ -44,11 +46,13 @@ class GoogleBooksService @Inject constructor() {
             Log.d("GoogleBooksService", "Réponse brute: $body")
 
             val jsonObject = gson.fromJson(body, JsonObject::class.java)
-            val items = jsonObject.getAsJsonArray("items") ?: return@withContext null
-            val item = items.firstOrNull()?.asJsonObject ?: return@withContext null
+            val item = jsonObject.getAsJsonArray("items")
+                ?.firstOrNull()?.asJsonObject ?: return@withContext null
 
             val volumeInfo = item.getAsJsonObject("volumeInfo") ?: return@withContext null
             val imageLinks = volumeInfo.getAsJsonObject("imageLinks") ?: JsonObject()
+            val accessInfo = item.getAsJsonObject("accessInfo") ?: JsonObject()
+            val searchInfo = item.getAsJsonObject("searchInfo") ?: JsonObject()
 
             return@withContext Book(
                 id = item.get("id")?.asString ?: "",
@@ -56,18 +60,19 @@ class GoogleBooksService @Inject constructor() {
                 authors = volumeInfo.getAsJsonArray("authors")?.map { it.asString } ?: emptyList(),
                 publisher = volumeInfo.get("publisher")?.asString,
                 publishedDate = volumeInfo.get("publishedDate")?.asString,
-                previewLink = null,
-                infoLink = volumeInfo.get("infoLink")?.asString,
+                pageCount = volumeInfo.get("pageCount")?.asInt ?: 0,
+                description = volumeInfo.get("description")?.asString,
+                industryIdentifiers = volumeInfo.getAsJsonArray("industryIdentifiers")
+                    ?.mapNotNull { it.asJsonObject.get("identifier")?.asString } ?: emptyList(),
+                categories = volumeInfo.getAsJsonArray("categories")?.map { it.asString } ?: emptyList(),
+                averageRating = volumeInfo.get("averageRating")?.asDouble,
+                ratingsCount = volumeInfo.get("ratingsCount")?.asInt,
                 thumbnailUrl = imageLinks.get("thumbnail")?.asString,
-                description = null,
-                pageCount = 0,
-                industryIdentifiers = emptyList(),
-                categories = emptyList(),
-                averageRating = null,
-                ratingsCount = null,
-                smallThumbnailUrl = null,
-                country = null,
-                textSnippet = null
+                smallThumbnailUrl = imageLinks.get("smallThumbnail")?.asString,
+                previewLink = volumeInfo.get("previewLink")?.asString,
+                infoLink = volumeInfo.get("infoLink")?.asString,
+                country = accessInfo.get("country")?.asString,
+                textSnippet = searchInfo.get("textSnippet")?.asString
             )
 
         } catch (e: Exception) {
