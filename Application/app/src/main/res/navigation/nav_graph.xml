@@ -34,7 +34,7 @@
 
         <argument
             android:name="book"
-            app:argType="fr.mastersd.sime.scanlib.domain.model.Book"
+            app:argType="fr.mastersd.sime.scanlib.data.Book"
             app:nullable="false" />
 
         <action

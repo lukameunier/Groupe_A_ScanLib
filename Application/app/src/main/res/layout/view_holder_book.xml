@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:text="@string/book_title_text"
         android:textAlignment="center"
-        android:textColor="@color/primary_button"
+        android:textColor="@color/secondary_background"
         android:textSize="14sp"
         android:maxLines="2"
         android:ellipsize="end"

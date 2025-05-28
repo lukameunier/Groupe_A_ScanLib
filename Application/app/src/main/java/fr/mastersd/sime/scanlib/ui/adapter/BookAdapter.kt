@@ -2,15 +2,16 @@ package fr.mastersd.sime.scanlib.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import fr.mastersd.sime.scanlib.databinding.ViewHolderBookBinding
-import fr.mastersd.sime.scanlib.domain.model.Book
+import fr.mastersd.sime.scanlib.data.Book
 
 class BookAdapter(
-    private val books: List<Book>,
     private val onBookClick: (Book) -> Unit
-) : RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
+) : ListAdapter<Book, BookAdapter.BookViewHolder>(BookDiffCallback()) {
 
     inner class BookViewHolder(private val binding: ViewHolderBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(book: Book) {
@@ -18,10 +19,7 @@ class BookAdapter(
             book.thumbnailUrl?.let {
                 binding.bookCoverImage.load(it)
             }
-
-            binding.root.setOnClickListener {
-                onBookClick(book)
-            }
+            binding.root.setOnClickListener { onBookClick(book) }
         }
     }
 
@@ -31,8 +29,11 @@ class BookAdapter(
     }
 
     override fun onBindViewHolder(holder: BookViewHolder, position: Int) {
-        holder.bind(books[position])
+        holder.bind(getItem(position))
     }
+}
 
-    override fun getItemCount(): Int = books.size
+class BookDiffCallback : DiffUtil.ItemCallback<Book>() {
+    override fun areItemsTheSame(oldItem: Book, newItem: Book): Boolean = oldItem.id == newItem.id
+    override fun areContentsTheSame(oldItem: Book, newItem: Book): Boolean = oldItem == newItem
 }

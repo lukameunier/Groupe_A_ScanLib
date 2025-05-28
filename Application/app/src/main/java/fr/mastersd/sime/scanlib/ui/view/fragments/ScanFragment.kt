@@ -31,7 +31,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.myapplication.ocr.BookSpineOCR
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
-import fr.mastersd.sime.scanlib.domain.model.Book
+import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import kotlinx.coroutines.launch

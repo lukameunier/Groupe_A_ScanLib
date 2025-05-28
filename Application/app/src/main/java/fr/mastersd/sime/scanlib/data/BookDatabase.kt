@@ -1,4 +1,4 @@
-package fr.mastersd.sime.scanlib.data.local
+package fr.mastersd.sime.scanlib.data
 
 import android.content.Context
 import androidx.room.Database
@@ -10,14 +10,14 @@ import androidx.room.TypeConverters
  * Base de données locale de l'app, implémentée avec Romm
  *
  * Contient une seule table: [BookEntity], représentant les livres scannés ou récupérés
- * Utilise des [Converters] personalisés pour les types complexes (List<String>)
+ * Utilise des [BookConverters] personalisés pour les types complexes (List<String>)
  *
  * @see BookDao pour les opérations sur la base
  * @see BookEntity pour le modèle persistant
- * @see BookRepositoryImpl pour le point d'entrée principal dans les opérations de lecture/écriture
+ * @see BookRepository pour le point d'entrée principal dans les opérations de lecture/écriture
  */
-@Database(entities = [BookEntity::class], version = 1)
-@TypeConverters(Converters::class)
+@Database(entities = [Book::class], version = 1)
+@TypeConverters(BookConverters::class)
 abstract class BookDatabase : RoomDatabase() {
 
     /**
@@ -28,8 +28,7 @@ abstract class BookDatabase : RoomDatabase() {
     abstract fun bookDao(): BookDao
 
     companion object {
-        @Volatile //instance unique partagée de la base: singleton thread-safe
-        private var INSTANCE: BookDatabase? = null
+        @Volatile private var INSTANCE: BookDatabase? = null
 
         /**
          * Fournit une instance unique de bd
@@ -40,14 +39,13 @@ abstract class BookDatabase : RoomDatabase() {
          * @param context Contexte d'app, qui initialise la bd
          * @return Instance partagée de [BookDatabase]
          */
-        fun getDatabase(context: Context): BookDatabase {
-            return INSTANCE ?: synchronized(this) {
-                Room.databaseBuilder(
+        fun getDatabase(context: Context): BookDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     BookDatabase::class.java,
-                    "scanlib_db" //nom physique de la bd SQLite
+                    "scanlib_db"
                 ).build().also { INSTANCE = it }
             }
-        }
     }
 }

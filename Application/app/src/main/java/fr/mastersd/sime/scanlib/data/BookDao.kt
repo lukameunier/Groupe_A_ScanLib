@@ -1,4 +1,4 @@
-package fr.mastersd.sime.scanlib.data.local
+package fr.mastersd.sime.scanlib.data
 
 import androidx.room.*
 /**
@@ -8,7 +8,7 @@ import androidx.room.*
  *
  * @see BookDatabase pour l’accès à la base
  * @see BookEntity pour le modèle stocké
- * @see BookRepositoryImpl pour l’usage métier des méthodes DAO
+ * @see BookRepository pour l’usage métier des méthodes DAO
 */
 @Dao
 interface BookDao {
@@ -19,7 +19,7 @@ interface BookDao {
       * @param books Liste de livres à insérer
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBooks(books: List<BookEntity>)
+    suspend fun insertBooks(books: List<Book>)
 
 
     /*
@@ -28,7 +28,7 @@ interface BookDao {
       * @return Une liste de tous les livres de la bd
      */
     @Query("SELECT * FROM books")
-    suspend fun getAllBooks(): List<BookEntity>
+    suspend fun getAllBooks(): List<Book>
 
 
     /*

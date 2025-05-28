@@ -82,13 +82,10 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.gson)
 
-    //ML Kit OCR : reconnaissance de texte avec TextRecognition
-    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation(libs.okhttp)
 
-    //Coroutines Kotlin pour await() et Dispatchers
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+    implementation(libs.text.recognition)
 
-
-
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 }

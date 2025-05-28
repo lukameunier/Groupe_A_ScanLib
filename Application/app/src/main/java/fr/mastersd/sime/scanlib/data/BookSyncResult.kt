@@ -1,4 +1,4 @@
-package fr.mastersd.sime.scanlib.domain.model
+package fr.mastersd.sime.scanlib.data
 
 /**
  * Modèle de résultat de synchronisation entre les titres OCR et les data récupérées
@@ -14,7 +14,7 @@ package fr.mastersd.sime.scanlib.domain.model
  *
  * @see ScanResult pour la source OCR brute
  * @see Book pour le modèle enrichi
- * @see BookRepositoryImpl pour l’étape de synchronisation entre OCR et données API
+ * @see BookRepository pour l’étape de synchronisation entre OCR et données API
  */
 data class BookSyncResult(
     val foundBooks: List<Book>,
