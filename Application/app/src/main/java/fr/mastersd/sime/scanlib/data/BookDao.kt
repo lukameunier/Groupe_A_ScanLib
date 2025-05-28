@@ -92,10 +92,7 @@ interface BookDao {
 
     //==================================================================================
     //==================================================================================
-    // méthode de mise à jour partielle @Update --> Modifications du user
-    // suppression ciblée @Delete --> Supression par user
-    //filtre par catégorie et dateAjout
-    //recherche ciblée par titre ou auteur
+    // //?//: méthode de mise à jour partielle d'un champ
     //==================================================================================
     //==================================================================================
 }
