@@ -16,7 +16,7 @@ import kotlinx.parcelize.Parcelize
 @Entity(tableName = "books")
 @Parcelize
 data class Book(
-    @PrimaryKey val id: String, //ID unique du volume (retoruné par Google Books)
+    @PrimaryKey val id: String, //ID unique du volume (retourné par Google Books)
     val title: String, //titre
     val authors: List<String>, //auteurs
     val publisher: String?, //maison d'édition

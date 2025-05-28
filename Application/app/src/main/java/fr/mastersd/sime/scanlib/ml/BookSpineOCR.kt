@@ -1,4 +1,4 @@
-package com.example.myapplication.ocr
+package fr.mastersd.sime.scanlib.ml
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
