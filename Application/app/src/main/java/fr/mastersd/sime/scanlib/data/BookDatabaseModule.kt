@@ -20,7 +20,9 @@ object BookDatabaseModule {
             appContext,
             BookDatabase::class.java,
             "scanlib_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()//supprime et recrée la bd si meme version
+            .build()
 
     @Provides
     fun provideBookDao(database: BookDatabase): BookDao = database.bookDao()
