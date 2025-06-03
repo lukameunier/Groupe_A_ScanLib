@@ -53,4 +53,9 @@ class HomeFragment : Fragment() {
             findNavController().navigate(action)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadBooks()
+    }
 }
