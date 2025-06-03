@@ -1,6 +1,6 @@
 package fr.mastersd.sime.scanlib.di
 
-import android.content.Context
+import android.app.Application
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,9 +15,10 @@ object ScanModule {
 
     @Provides
     @Singleton
-    fun provideBookSpineDetector(context: Context): BookSpineDetector {
-        return BookSpineDetector(context.assets)
+    fun provideBookSpineDetector(app: Application): BookSpineDetector {
+        return BookSpineDetector(app.assets)
     }
+
 
     @Provides
     @Singleton

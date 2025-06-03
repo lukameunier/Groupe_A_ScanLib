@@ -1,19 +1,10 @@
 package fr.mastersd.sime.scanlib.ui.view.fragments
 
 import android.Manifest
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import androidx.exifinterface.media.ExifInterface
 import android.app.AlertDialog
 import android.content.pm.PackageManager
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,23 +17,18 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import fr.mastersd.sime.scanlib.ml.BookSpineOCR
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.data.Book
-import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
-import kotlinx.coroutines.launch
-import java.io.FileOutputStream
+import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 
 /**
- * Fragment responsable de la capture d'image, de la détection de tranches de livres, de l'extraction OCR, interrogation del'API Google Books via viewmodel
+ * Fragment responsable de la capture d'image, de la détection de tranches de livres, de l'extraction OCR, interrogation de l'API Google Books via viewmodel
  *
  * @see BookViewModel pour la logique de synchronisation
- * @see BookSpineDetector pour la détection YOLO des tranches
- * @see BookSpineOCR pour l'OCR basé sur MLKit
+ * @see ScanViewModel pour la logique de traitement d'image
  */
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
@@ -51,9 +37,7 @@ class ScanFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: BookViewModel by viewModels()
-
-    private lateinit var bookSpineDetector: BookSpineDetector
-    private lateinit var bookSpineOCR: BookSpineOCR
+    private val scanViewModel: ScanViewModel by viewModels() // MODIF MVVM : nouveau ViewModel pour traitement image
 
     private val cameraProviderFuture by lazy {
         ProcessCameraProvider.getInstance(requireContext())
@@ -69,30 +53,16 @@ class ScanFragment : Fragment() {
             if (granted) startCamera() else handleCameraDenied()
         }
 
-    /**
-     * Initialise la vue du fragment avec ViewBinding
-     *
-     * @return La vue racine du fragment
-     */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScanBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    /**
-     * Configure observers, caméra et listeners lors de la création de la vue
-     *
-     * @param view La vue créée
-     * @param savedInstanceState État sauvegardé, s'il existe
-     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
 
-        bookSpineDetector = BookSpineDetector(requireContext().assets)
-        bookSpineOCR = BookSpineOCR()
-
-        //observe les résultats de la synchronisation API Google Books
+        // observe les résultats de la synchronisation API Google Books
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             val timeString = "️${duration} ms"
@@ -121,37 +91,24 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Observe le chemin de l’image capturée, applique détection + OCR
+     * Observe les chemins d'image et résultats du traitement (MVVM)
      */
     private fun setupObservers() {
         viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
-            val bitmap = getRotatedBitmap(path)
-            val (boxes, modelSize) = bookSpineDetector.detect(bitmap)
+            scanViewModel.processImage(path)
+        }
 
-            val boxedBitmap = drawBoxesOnBitmap(bitmap, boxes, modelSize)
+        scanViewModel.processedImage.observe(viewLifecycleOwner) { bitmap ->
+            binding.previewThumbnail.setImageBitmap(bitmap)
+        }
 
-            try {
-                FileOutputStream(path).use { output ->
-                    boxedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
-                }
-                Log.d("ScanFragment", "Image avec boîtes enregistrée dans $path")
-            } catch (e: Exception) {
-                Log.e("ScanFragment", "Erreur lors de l’enregistrement de l’image annotée", e)
-            }
-
-            binding.previewThumbnail.setImageBitmap(boxedBitmap)
-
-            // OCR des zones détectées
-            lifecycleScope.launch {
-                val texts = bookSpineOCR.extractTextsFromBoxes(bitmap, boxes)
-                val nonEmptyTexts = texts.filter { it.isNotBlank() }
-
-                if (nonEmptyTexts.isNotEmpty()) {
-                    syncStartTime = System.currentTimeMillis()
-                    viewModel.syncBooksFromValTexts(nonEmptyTexts)
-                } else {
-                    Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
-                }
+        scanViewModel.ocrTexts.observe(viewLifecycleOwner) { texts ->
+            val nonEmptyTexts = texts.filter { it.isNotBlank() }
+            if (nonEmptyTexts.isNotEmpty()) {
+                syncStartTime = System.currentTimeMillis()
+                viewModel.syncBooksFromValTexts(nonEmptyTexts)
+            } else {
+                Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -172,21 +129,13 @@ class ScanFragment : Fragment() {
             AlertDialog.Builder(requireContext())
                 .setTitle("Images capturées")
                 .setItems(images.map { it.name }.toTypedArray()) { _, index ->
-                    val rotated = getRotatedBitmap(images[index].absolutePath)
-                    previewThumbnail.setImageBitmap(rotated)
+                    scanViewModel.processImage(images[index].absolutePath)
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
         }
     }
 
-    /**
-     * Affiche une boîte de dialogue avec les détails d’un livre enrichi
-     *
-     * @param book Livre principal à afficher
-     * @param allBooks Liste complète des livres détectés
-     * @param duration Temps de traitement à afficher dans la UI
-     */
     private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
         val message = """
             $duration
@@ -211,12 +160,6 @@ class ScanFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Affiche une liste de livres détectés, permet de sélectionner un livre pour les détails
-     *
-     * @param books Liste des livres détectés
-     * @param duration Temps de traitement total
-     */
     private fun showBookListDialog(books: List<Book>, duration: String) {
         val titledBooks = books.mapIndexed { index, book ->
             "Livre ${index + 1} : ${book.title}"
@@ -231,10 +174,6 @@ class ScanFragment : Fragment() {
             .show()
     }
 
-
-    /**
-     * Vérifie et demande la permission d’accès à la caméra
-     */
     private fun checkCameraPermission() {
         when {
             ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> startCamera()
@@ -252,9 +191,6 @@ class ScanFragment : Fragment() {
         }
     }
 
-    /**
-     * Démarre la caméra avec CameraX (preview + capture)
-     */
     private fun startCamera() {
         cameraProviderFuture.addListener({
             val provider = cameraProviderFuture.get()
@@ -283,67 +219,9 @@ class ScanFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    /**
-     * Corrige l’orientation d’une image à partir des métadonnées EXIF
-     *
-     * @param path Chemin du fichier image
-     * @return Bitmap correctement orienté
-     */
-    private fun getRotatedBitmap(path: String): Bitmap {
-        val bmp = BitmapFactory.decodeFile(path)
-        val exif = ExifInterface(path)
-        val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-        val matrix = Matrix().apply {
-            when (orientation) {
-                ExifInterface.ORIENTATION_ROTATE_90   -> postRotate(90f)
-                ExifInterface.ORIENTATION_ROTATE_180  -> postRotate(180f)
-                ExifInterface.ORIENTATION_ROTATE_270  -> postRotate(270f)
-            }
-        }
-        return Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
-    }
-
-    /**
-     * Affiche un toast si la permission caméra est refusée
-     */
     private fun handleCameraDenied() {
         Toast.makeText(requireContext(), "Permission caméra refusée", Toast.LENGTH_SHORT).show()
         findNavController().navigateUp()
-    }
-
-    /**
-     * Dessine les boîtes de détection sur une image bitmap
-     *
-     * @param base Image d’origine
-     * @param boxes Coordonnées des boîtes à dessiner
-     * @param inputSize Taille utilisée par le modèle de détection
-     * @return Bitmap annoté avec les boîtes
-     */
-    private fun drawBoxesOnBitmap(base: Bitmap, boxes: List<RectF>, inputSize: Size): Bitmap {
-        val output = base.copy(Bitmap.Config.ARGB_8888, true)
-        val canvas = Canvas(output)
-
-        val scaleX = base.width.toFloat() / inputSize.width
-        val scaleY = base.height.toFloat() / inputSize.height
-
-        val paint = Paint().apply {
-            color = Color.RED
-            style = Paint.Style.STROKE
-            strokeWidth = 50f
-            isAntiAlias = true
-        }
-
-        boxes.forEach { box ->
-            val scaledBox = RectF(
-                box.left * scaleX,
-                box.top * scaleY,
-                box.right * scaleX,
-                box.bottom * scaleY
-            )
-            canvas.drawRect(scaledBox, paint)
-        }
-
-        return output
     }
 
 //================================================================================
@@ -353,6 +231,4 @@ class ScanFragment : Fragment() {
 // ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
 //================================================================================
 //================================================================================
-
-
 }
