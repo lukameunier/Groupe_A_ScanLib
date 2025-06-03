@@ -178,65 +178,6 @@ class ScanFragment : Fragment() {
                 .setNegativeButton("Fermer", null)
                 .show()
         }
-
-        //bouton pour afficher les livres de la bd
-        tempButton.setOnClickListener {
-            syncStartTime = System.currentTimeMillis()
-//         viewModel.syncBooksFromAssets(requireContext(), "scan.txt") ---> A SUPPRIMER SAUF TEST
-
-            //charger les livres en base locale
-            viewModel.loadBooksFromDb(requireContext())
-
-            //observer et afficher les résultats
-            viewModel.allBooks.observe(viewLifecycleOwner) { books ->
-                val duration = System.currentTimeMillis() - syncStartTime
-                if (books.isEmpty()) {
-                    Toast.makeText(requireContext(), "📂 Aucun livre trouvé dans la base locale", Toast.LENGTH_SHORT).show()
-                } else {
-                    val bookTitles = books.mapIndexed { index, book ->
-                        "📘 ${index + 1}. ${book.title}"
-                    }.toTypedArray()
-
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Livres en base locale (${books.size}) – ${duration}ms")
-                        .setItems(bookTitles) { _, index ->
-                            val book = books[index]
-                            val details = """
-                        📚 Titre            : ${book.title}
-                        👤 Auteur(s)        : ${book.authors.joinToString()}
-                        🏢 Éditeur          : ${book.publisher}
-                        📅 Date de pub.     : ${book.publishedDate}
-                        📄 Pages            : ${book.pageCount}
-                        🔗 Lien             : ${book.infoLink ?: "N/A"}
-                    """.trimIndent()
-
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("Détails du livre")
-                                .setMessage(details)
-                                .setPositiveButton("Fermer", null)
-                                .show()
-                        }
-                        .setNegativeButton("Fermer", null)
-                        .show()
-                }
-            }
-
-            //!: A SUPPRIMER
-            //-----------------------------
-            //INSERTION D'UN LIVRE MANUEL
-            //------------------------------
-            /* A decommenter si envie de tester
-                viewModel.insertSampleBook(requireContext())
-                viewModel.getAllBooks(requireContext())
-                viewModel.fetchBooksFromDb(requireContext())
-                viewModel.booksFromDb.observe(viewLifecycleOwner) { books ->
-                    books.forEach {
-                        Toast.makeText(requireContext(), "📘 ${it.title}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-        */
-
-        }
     }
 
     /**
