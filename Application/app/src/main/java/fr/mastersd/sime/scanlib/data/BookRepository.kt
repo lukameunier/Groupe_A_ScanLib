@@ -3,6 +3,7 @@ package fr.mastersd.sime.scanlib.data
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import javax.inject.Inject
 
 class BookRepository @Inject constructor(
@@ -99,7 +100,7 @@ class BookRepository @Inject constructor(
     suspend fun getAllScores(): List<Double> {
         return bookDao.getAllBooks()
             .mapNotNull { it.averageRating }
-            .map { "%.1f".format(it).toDouble() } // pour normaliser les décimales (ex: 3.0, 3.5)
+            .map { String.format(Locale.US, "%.1f", it).toDouble() }
             .distinct()
             .sortedDescending()
     }
@@ -107,5 +108,4 @@ class BookRepository @Inject constructor(
     suspend fun getBooksWithoutScore(): List<Book> {
         return bookDao.getBooksByNoScore()
     }
-
 }
