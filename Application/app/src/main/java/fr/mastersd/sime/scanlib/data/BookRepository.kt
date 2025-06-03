@@ -68,6 +68,18 @@ class BookRepository @Inject constructor(
         return bookDao.getBooksByKeyword(keyword)
     }
 
+    suspend fun getBooksByYear(year: String): List<Book> {
+        return bookDao.getBooksByYear(year)
+    }
+
+    suspend fun getAllYears(): List<String> {
+        return bookDao.getAllBooks()
+            .mapNotNull { it.publishedDate?.take(4) }
+            .filter { it.matches(Regex("\\d{4}")) }
+            .distinct()
+            .sortedDescending()
+    }
+
     /**
      * Récuperer les catégories existantes
      *
@@ -84,5 +96,16 @@ class BookRepository @Inject constructor(
         return genres
     }
 
+    suspend fun getAllScores(): List<Double> {
+        return bookDao.getAllBooks()
+            .mapNotNull { it.averageRating }
+            .map { "%.1f".format(it).toDouble() } // pour normaliser les décimales (ex: 3.0, 3.5)
+            .distinct()
+            .sortedDescending()
+    }
+
+    suspend fun getBooksWithoutScore(): List<Book> {
+        return bookDao.getBooksByNoScore()
+    }
 
 }

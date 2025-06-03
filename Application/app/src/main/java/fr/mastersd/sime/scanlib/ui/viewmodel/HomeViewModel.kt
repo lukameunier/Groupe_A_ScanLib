@@ -75,5 +75,40 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private val _years = MutableLiveData<List<String>>()
+    val years: LiveData<List<String>> get() = _years
+
+    fun loadYears() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllYears()
+            _years.postValue(list)
+        }
+    }
+
+    fun filterByYear(year: String) {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksByYear(year)
+            _books.postValue(result)
+        }
+    }
+
+    private val _scores = MutableLiveData<List<Double>>()
+    val scores: LiveData<List<Double>> get() = _scores
+
+    fun loadScores() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllScores()
+            _scores.postValue(list)
+        }
+    }
+
+    fun filterByNoScore() {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksWithoutScore()
+            _books.postValue(result)
+        }
+    }
+
+
 
 }

@@ -24,6 +24,8 @@ class HomeFragment : Fragment() {
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var adapter: BookAdapter
     private var genreListCache: List<String> = emptyList()
+    private var yearListCache: List<String> = emptyList()
+    private var scoreListCache: List<Double> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,6 +53,17 @@ class HomeFragment : Fragment() {
             adapter.submitList(bookList)
         }
 
+        //observer les années
+        viewModel.years.observe(viewLifecycleOwner) { years ->
+            yearListCache = years.sortedDescending()
+        }
+
+        //observer les scores
+        viewModel.scores.observe(viewLifecycleOwner) {
+            scoreListCache = it
+        }
+
+
         // Ajouter un livre
         binding.addBookButton.setOnClickListener {
             val action = HomeFragmentDirections.actionHomeFragmentToScanFragment()
@@ -72,8 +85,8 @@ class HomeFragment : Fragment() {
         })
 
         // Observer les genres
-        viewModel.genres.observe(viewLifecycleOwner) { list ->
-            genreListCache = list
+        viewModel.genres.observe(viewLifecycleOwner) { genres ->
+            genreListCache = genres
         }
 
         // Bouton genre (menu dynamique avec cache)
@@ -95,44 +108,63 @@ class HomeFragment : Fragment() {
 
         // Bouton score minimal
         binding.filterButton.setOnClickListener {
-            val scores = arrayOf("1.0", "2.0", "3.0", "4.0", "5.0")
+            val options = arrayOf("Filtrer par score", "Filtrer par année", "Réinitialiser les filtres")
+
             AlertDialog.Builder(requireContext())
-                .setTitle("Filtrer par note minimale")
-                .setItems(scores) { _, index ->
-                    val selected = scores[index].toDouble()
-                    viewModel.filterByScore(selected)
+                .setTitle("Choisir un filtre")
+                .setItems(options) { _, index ->
+                    when (index) {
+                        0 -> showScoreFilterDialog()
+                        1 -> showYearFilterDialog()
+                        2 -> viewModel.loadBooks()
+                    }
                 }
                 .setNegativeButton("Annuler", null)
                 .show()
         }
 
-//        binding.filterButton.setOnClickListener {
-//            val options = arrayOf("Filtrer par score", "Filtrer par année", "Réinitialiser les filtres")
-//
-//            AlertDialog.Builder(requireContext())
-//                .setTitle("Choisir un filtre")
-//                .setItems(options) { _, index ->
-//                    when (index) {
-//                        0 -> showScoreFilterDialog()
-//                        1 -> showYearFilterDialog()
-//                        2 -> viewModel.loadBooks() // reset
-//                    }
-//                }
-//                .setNegativeButton("Annuler", null)
-//                .show()
-//        }
-
-        // Charger les genres
+        // Charger les genres et les années et les socres
         viewModel.loadGenres()
+        viewModel.loadYears()
+        viewModel.loadScores()
     }
 
     private fun showScoreFilterDialog() {
-        val scores = arrayOf("1.0", "2.0", "3.0", "4.0", "5.0")
+        if (scoreListCache.isEmpty()) {
+            Toast.makeText(requireContext(), "Aucun score trouvé", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Construire la liste avec "Inconnu" en dernier
+        val scores = scoreListCache.map { it.toString() } + "Score inconnu"
+
         AlertDialog.Builder(requireContext())
-            .setTitle("Filtrer par note minimale")
-            .setItems(scores) { _, index ->
-                val selectedScore = scores[index].toDouble()
-                viewModel.filterByScore(selectedScore)
+            .setTitle("Filtrer par note")
+            .setItems(scores.toTypedArray()) { _, index ->
+                if (index == scores.lastIndex) {
+                    // "Score inconnu" sélectionné
+                    viewModel.filterByNoScore()
+                } else {
+                    val selectedScore = scores[index].toDouble()
+                    viewModel.filterByScore(selectedScore)
+                }
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
+
+    private fun showYearFilterDialog() {
+        if (yearListCache.isEmpty()) {
+            Toast.makeText(requireContext(), "Aucune année trouvée", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val years = yearListCache.toTypedArray()
+        AlertDialog.Builder(requireContext())
+            .setTitle("Filtrer par année")
+            .setItems(years) { _, index ->
+                viewModel.filterByYear(years[index])
             }
             .setNegativeButton("Annuler", null)
             .show()

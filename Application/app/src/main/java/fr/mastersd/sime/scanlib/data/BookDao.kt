@@ -61,14 +61,17 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE averageRating >= :minScore")
     suspend fun getBooksByMinimumScore(minScore: Double): List<Book>
 
+    @Query("SELECT * FROM books WHERE averageRating IS NULL")
+    suspend fun getBooksByNoScore(): List<Book>
+
     /**
      * Filtre par année d'édition
      *
-     * @param pubDate Date de publication selctionnée
+     * @param year Date de publication selctionnée
      * @returnLiset de livre de l'année d'édition
      */
-    @Query("SELECT * FROM books WHERE publishedDate = :pubDate")
-    suspend fun getBooksByPublishedDate(pubDate: String): List<Book>
+    @Query("SELECT * FROM books WHERE publishedDate LIKE :year || '%'")
+    suspend fun getBooksByYear(year: String): List<Book>
 
     /**
      * Filtre par année d'ajout ?
