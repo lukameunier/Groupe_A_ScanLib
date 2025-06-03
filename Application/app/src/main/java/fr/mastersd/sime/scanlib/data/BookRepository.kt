@@ -55,4 +55,57 @@ class BookRepository @Inject constructor(
     suspend fun getAllBooks(): List<Book> = withContext(Dispatchers.IO) {
         bookDao.getAllBooks()
     }
+
+    suspend fun getBooksByCategory(category: String): List<Book> {
+        return bookDao.getBooksByCategory(category)
+    }
+
+    suspend fun getBooksByMinimumScore(minScore: Double): List<Book> {
+        return bookDao.getBooksByMinimumScore(minScore)
+    }
+
+    suspend fun getBooksByKeyword(keyword: String): List<Book> {
+        return bookDao.getBooksByKeyword(keyword)
+    }
+
+    suspend fun getBooksByYear(year: String): List<Book> {
+        return bookDao.getBooksByYear(year)
+    }
+
+    suspend fun getAllYears(): List<String> {
+        return bookDao.getAllBooks()
+            .mapNotNull { it.publishedDate?.take(4) }
+            .filter { it.matches(Regex("\\d{4}")) }
+            .distinct()
+            .sortedDescending()
+    }
+
+    /**
+     * Récuperer les catégories existantes
+     *
+     * @return Liste des catégories distinct
+     */
+    suspend fun getAllGenres(): List<String> {
+        val allBooks = bookDao.getAllBooks()
+        val genres = allBooks.flatMap { it.categories ?: emptyList() }
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+
+        Log.d("DEBUG_GENRES", "Genres présents dans la base : $genres")
+        return genres
+    }
+
+    suspend fun getAllScores(): List<Double> {
+        return bookDao.getAllBooks()
+            .mapNotNull { it.averageRating }
+            .map { "%.1f".format(it).toDouble() } // pour normaliser les décimales (ex: 3.0, 3.5)
+            .distinct()
+            .sortedDescending()
+    }
+
+    suspend fun getBooksWithoutScore(): List<Book> {
+        return bookDao.getBooksByNoScore()
+    }
+
 }

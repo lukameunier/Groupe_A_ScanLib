@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
 import kotlinx.coroutines.launch
+import org.tensorflow.lite.support.label.Category
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,4 +34,81 @@ class HomeViewModel @Inject constructor(
             _books.postValue(list) // postValue pour éviter les bugs si appelé hors du thread UI
         }
     }
+
+    /**
+     * Filtre par catégorie
+     */
+    private val _genres = MutableLiveData<List<String>>()
+    val genres: LiveData<List<String>> get() = _genres
+
+    fun loadGenres() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllGenres()
+            _genres.postValue(list)
+        }
+    }
+
+    fun filterByCategory(category: String) {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksByCategory(category)
+            _books.postValue(result)
+        }
+    }
+
+    /**
+     * Filtre par score de livre
+     */
+    fun filterByScore(minScore: Double) {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksByMinimumScore(minScore)
+            _books.postValue(result)
+        }
+    }
+
+    /**
+     * Recherche par mot-clé
+     */
+    fun searchByKeyword(keyword: String ){
+        viewModelScope.launch {
+            val result = bookRepository.getBooksByKeyword(keyword)
+            _books.postValue(result)
+        }
+    }
+
+    private val _years = MutableLiveData<List<String>>()
+    val years: LiveData<List<String>> get() = _years
+
+    fun loadYears() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllYears()
+            _years.postValue(list)
+        }
+    }
+
+    fun filterByYear(year: String) {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksByYear(year)
+            _books.postValue(result)
+        }
+    }
+
+    private val _scores = MutableLiveData<List<Double>>()
+    val scores: LiveData<List<Double>> get() = _scores
+
+    fun loadScores() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllScores()
+            _scores.postValue(list)
+        }
+    }
+
+    fun filterByNoScore() {
+        viewModelScope.launch {
+            val result = bookRepository.getBooksWithoutScore()
+            _books.postValue(result)
+        }
+    }
+
+
+
 }
