@@ -2,7 +2,7 @@
     <string name="app_name">ScanLib</string>
     <string name="home_title">Accueil</string>
     <string name="add_book_desc_button">Ajouter un livre</string>
-    <string name="hint_search_bar_text">Rechercher dans la bibliothèque...</string>
+    <string name="hint_search_bar_text">Rechercher dans la bibliothèque…</string>
     <string name="genre_button_text">Genre</string>
     <string name="filter_text_button">Filtre</string>
     <string name="group_text_button">Tous</string>
@@ -26,4 +26,12 @@
     <string name="erase_edit_button_text">Annuler les modifications</string>
     <string name="valid_button_text">Accepte les modifications</string>
     <string name="book_genre_edit_text">%s</string>
+
+    <string name="filters_label">Filtres actifs : </string>
+    <string name="filter_genre">Genre = %1$s</string>
+    <string name="filter_year">Année = %1$s</string>
+    <string name="filter_score_min">Score ≥ %1$.1f</string>
+    <string name="filter_score_unknown">Score = Inconnu</string>
+    <string name="no_filters">Aucun filtre actif</string>
+    <string name="reset_filters">Réinitialiser les filtres</string>
 </resources>

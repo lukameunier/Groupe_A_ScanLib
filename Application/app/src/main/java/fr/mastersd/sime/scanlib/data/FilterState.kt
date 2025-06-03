@@ -5,5 +5,5 @@ data class FilterState(
     val minScore: Double? = null,
     val scoreUnknown: Boolean = false,
     val year: String? = null,
-    val yearUnknown: Boolean = false
+//    val yearUnknown: Boolean = false
 )

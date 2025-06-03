@@ -109,6 +109,52 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Affichage des filtres actifs -->
+    <TextView
+        android:id="@+id/activeFiltersText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:gravity="center_vertical"
+        android:text="@string/no_filters"
+        android:textStyle="italic"
+        android:textSize="14sp"
+        android:textColor="@color/secondary_text"
+        android:background="@drawable/bg_filters_box"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:maxLines="6"
+        android:ellipsize="none"
+        app:layout_constraintTop_toBottomOf="@id/searchBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/resetFiltersButton"
+        app:layout_constraintBottom_toTopOf="@id/bookRecyclerView" />
+
+
+    <ImageButton
+        android:id="@+id/resetFiltersButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/baseline_restart_alt_24"
+        android:background="@drawable/bg_circle_button"
+        android:contentDescription="@string/reset_filters"
+        android:padding="10dp"
+        app:layout_constraintStart_toEndOf="@id/activeFiltersText"
+        app:layout_constraintTop_toTopOf="@id/activeFiltersText"
+        app:layout_constraintBottom_toBottomOf="@id/activeFiltersText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/secondary_text" />
+
     <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/bookRecyclerView"
@@ -118,7 +164,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         tools:listitem="@layout/view_holder_book"
-        app:layout_constraintTop_toBottomOf="@id/searchBar"
+        app:layout_constraintTop_toBottomOf="@id/activeFiltersText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
