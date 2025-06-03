@@ -10,12 +10,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import fr.mastersd.sime.scanlib.data.FilterState
 import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.HomeViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -23,9 +27,12 @@ class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var adapter: BookAdapter
+
     private var genreListCache: List<String> = emptyList()
     private var yearListCache: List<String> = emptyList()
     private var scoreListCache: List<Double> = emptyList()
+
+    private var currentFilter = FilterState()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,7 +46,6 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialiser l'adapter avec le click listener
         adapter = BookAdapter { selectedBook ->
             val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(selectedBook)
             findNavController().navigate(action)
@@ -48,35 +54,22 @@ class HomeFragment : Fragment() {
         binding.bookRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.bookRecyclerView.adapter = adapter
 
-        // Observer les livres
-        viewModel.books.observe(viewLifecycleOwner) { bookList ->
-            adapter.submitList(bookList)
-        }
+        // 🔁 Observer les flux de données avec lifecycleScope
+        collectStateFlows()
 
-        //observer les années
-        viewModel.years.observe(viewLifecycleOwner) { years ->
-            yearListCache = years.sortedDescending()
-        }
-
-        //observer les scores
-        viewModel.scores.observe(viewLifecycleOwner) {
-            scoreListCache = it
-        }
-
-
-        // Ajouter un livre
+        // 📚 Ajouter un livre
         binding.addBookButton.setOnClickListener {
             val action = HomeFragmentDirections.actionHomeFragmentToScanFragment()
             findNavController().navigate(action)
         }
 
-        // Recherche dynamique
+        // 🔍 Recherche dynamique
         binding.searchBar.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val keyword = s.toString()
                 if (keyword.length >= 2) {
-                    viewModel.searchByKeyword(keyword) // ✅ nom correct
+                    viewModel.searchByKeyword(keyword)
                 } else {
                     viewModel.loadBooks()
                 }
@@ -84,12 +77,7 @@ class HomeFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Observer les genres
-        viewModel.genres.observe(viewLifecycleOwner) { genres ->
-            genreListCache = genres
-        }
-
-        // Bouton genre (menu dynamique avec cache)
+        // 🎯 Bouton genre
         binding.authorButton.setOnClickListener {
             if (genreListCache.isEmpty()) {
                 Toast.makeText(requireContext(), "Aucun genre disponible", Toast.LENGTH_SHORT).show()
@@ -100,13 +88,14 @@ class HomeFragment : Fragment() {
             AlertDialog.Builder(requireContext())
                 .setTitle("Choisir un genre")
                 .setItems(items) { _, index ->
-                    viewModel.filterByCategory(items[index])
+                    currentFilter = currentFilter.copy(category = items[index])
+                    viewModel.updateFilter(currentFilter)
                 }
                 .setNegativeButton("Annuler", null)
                 .show()
         }
 
-        // Bouton score minimal
+        // 🎚 Bouton filtre combiné
         binding.filterButton.setOnClickListener {
             val options = arrayOf("Filtrer par score", "Filtrer par année", "Réinitialiser les filtres")
 
@@ -116,17 +105,30 @@ class HomeFragment : Fragment() {
                     when (index) {
                         0 -> showScoreFilterDialog()
                         1 -> showYearFilterDialog()
-                        2 -> viewModel.loadBooks()
+                        2 -> {
+                            currentFilter = FilterState()
+                            viewModel.updateFilter(currentFilter)
+                        }
                     }
                 }
                 .setNegativeButton("Annuler", null)
                 .show()
         }
+    }
 
-        // Charger les genres et les années et les socres
-        viewModel.loadGenres()
-        viewModel.loadYears()
-        viewModel.loadScores()
+    private fun collectStateFlows() {
+        lifecycleScope.launch {
+            viewModel.books.collectLatest { adapter.submitList(it) }
+        }
+        lifecycleScope.launch {
+            viewModel.genres.collectLatest { genreListCache = it }
+        }
+        lifecycleScope.launch {
+            viewModel.years.collectLatest { yearListCache = it.sortedDescending() }
+        }
+        lifecycleScope.launch {
+            viewModel.scores.collectLatest { scoreListCache = it }
+        }
     }
 
     private fun showScoreFilterDialog() {
@@ -135,24 +137,21 @@ class HomeFragment : Fragment() {
             return
         }
 
-        // Construire la liste avec "Inconnu" en dernier
         val scores = scoreListCache.map { it.toString() } + "Score inconnu"
 
         AlertDialog.Builder(requireContext())
             .setTitle("Filtrer par note")
             .setItems(scores.toTypedArray()) { _, index ->
                 if (index == scores.lastIndex) {
-                    // "Score inconnu" sélectionné
-                    viewModel.filterByNoScore()
+                    currentFilter = currentFilter.copy(minScore = null, scoreUnknown = true)
                 } else {
-                    val selectedScore = scores[index].toDouble()
-                    viewModel.filterByScore(selectedScore)
+                    currentFilter = currentFilter.copy(minScore = scores[index].toDouble(), scoreUnknown = false)
                 }
+                viewModel.updateFilter(currentFilter)
             }
             .setNegativeButton("Annuler", null)
             .show()
     }
-
 
     private fun showYearFilterDialog() {
         if (yearListCache.isEmpty()) {
@@ -164,14 +163,10 @@ class HomeFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Filtrer par année")
             .setItems(years) { _, index ->
-                viewModel.filterByYear(years[index])
+                currentFilter = currentFilter.copy(year = years[index], yearUnknown = false)
+                viewModel.updateFilter(currentFilter)
             }
             .setNegativeButton("Annuler", null)
             .show()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.loadBooks()
     }
 }

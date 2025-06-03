@@ -100,7 +100,7 @@ class BookRepository @Inject constructor(
     suspend fun getAllScores(): List<Double> {
         return bookDao.getAllBooks()
             .mapNotNull { it.averageRating }
-            .map { String.format(Locale.US, "%.1f", it).toDouble() }
+            .map { String.format(Locale.US, "%.1f", it).toDouble() } // pour normaliser les décimales 3.0
             .distinct()
             .sortedDescending()
     }
@@ -108,4 +108,5 @@ class BookRepository @Inject constructor(
     suspend fun getBooksWithoutScore(): List<Book> {
         return bookDao.getBooksByNoScore()
     }
+
 }
