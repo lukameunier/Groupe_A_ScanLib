@@ -1,6 +1,7 @@
 package fr.mastersd.sime.scanlib.ui.adapter
 
 import android.view.LayoutInflater
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -15,9 +16,10 @@ class BookAdapter(
 
     inner class BookViewHolder(private val binding: ViewHolderBookBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(book: Book) {
+            Log.d("BookAdapter", "Book: ${book.title} | thumbnailUrl: ${book.thumbnailUrl}")
             binding.bookTitle.text = book.title
-            book.thumbnailUrl?.let {
-                binding.bookCoverImage.load(it)
+            binding.bookCoverImage.load(book.thumbnailUrl) {
+                crossfade(true)
             }
             binding.root.setOnClickListener { onBookClick(book) }
         }
