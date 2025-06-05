@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
+import fr.mastersd.sime.scanlib.R
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
@@ -58,38 +59,12 @@ class ScanFragment : Fragment() {
         return binding.root
     }
 
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//        viewModel.setContext(requireContext())
-//
-//        // observe les résultats de la synchronisation API Google Books
-//        viewModel.syncResult.observe(viewLifecycleOwner) { result ->
-//            val duration = System.currentTimeMillis() - syncStartTime
-//            val timeString = "️${duration} ms"
-//
-//            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
-//
-//            if (result.foundBooks.isNotEmpty()) {
-//                if (result.foundBooks.size == 1) {
-//                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks, timeString)
-//                } else {
-//                    showBookListDialog(result.foundBooks, timeString)
-//                }
-//            } else {
-//                Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//
-//        setupObservers()
-//        setupListeners()
-//        checkCameraPermission()
-//    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
 
-        // observe les résultats de la synchronisation API Google Books
+        // Observe les résultats après le traitement OCR + appel API,
+        // puis navigue vers ScanResultFragment en supprimant ScanFragment de la pile
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
@@ -97,11 +72,20 @@ class ScanFragment : Fragment() {
             if (result.foundBooks.isNotEmpty()) {
                 val action = ScanFragmentDirections
                     .actionScanFragmentToScanResultFragment(result.foundBooks.toTypedArray())
-                findNavController().navigate(action)
+
+                val navOptions = androidx.navigation.navOptions {
+                    popUpTo(R.id.scanFragment) {
+                        inclusive = true
+                    }
+                }
+
+                findNavController().navigate(action, navOptions)
             } else {
                 Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
             }
         }
+
+
 
         setupObservers()
         setupListeners()
