@@ -15,7 +15,6 @@ import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.MeteringPointFactory
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
@@ -30,7 +29,6 @@ import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
-    /* ----- initialisation ----- */
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
 
@@ -42,7 +40,7 @@ class ScanFragment : Fragment() {
     }
 
     private var syncStartTime: Long = 0L
-    private var camera: Camera? = null // Pour gérer le focus au toucher
+    private var camera: Camera? = null
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -58,7 +56,6 @@ class ScanFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
 
-        // Observe les résultats de la synchronisation API Google Books
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             val timeString = "️${duration} ms"
@@ -148,7 +145,6 @@ class ScanFragment : Fragment() {
 
                 camera?.cameraControl?.startFocusAndMetering(action)
 
-                // Feedback visuel : affiche et anime le cercle
                 showFocusIndicator(event.x, event.y)
                 v.performClick()
             }
@@ -160,7 +156,6 @@ class ScanFragment : Fragment() {
     private fun showFocusIndicator(x: Float, y: Float) {
         val indicator = binding.focusIndicator
 
-        // Positionne le cercle (ajuste pour le centrer)
         indicator.translationX = x - indicator.width / 2
         indicator.translationY = y - indicator.height / 2
         indicator.visibility = View.VISIBLE
@@ -168,7 +163,6 @@ class ScanFragment : Fragment() {
         indicator.scaleX = 1f
         indicator.scaleY = 1f
 
-        // Animation (zoom puis fade)
         indicator.animate()
             .scaleX(1.8f)
             .scaleY(1.8f)
@@ -275,5 +269,4 @@ class ScanFragment : Fragment() {
     // !: injection via Hilt pour les appels à la bd
     // ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
     //================================================================================
-
 }

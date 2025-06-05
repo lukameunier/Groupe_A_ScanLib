@@ -118,6 +118,9 @@ interface BookDao {
     @Query("SELECT DISTINCT categories FROM books")
     suspend fun getAllCategories(): List<String>
 
+    @Delete
+    suspend fun deleteBooks(books: List<Book>)
+
     //==================================================================================
     //==================================================================================
     // //?//: méthode de mise à jour partielle d'un champ

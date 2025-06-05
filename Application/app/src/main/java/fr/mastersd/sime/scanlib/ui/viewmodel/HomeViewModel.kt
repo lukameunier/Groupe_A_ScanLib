@@ -109,6 +109,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
-
+    fun deleteBooks(books: List<Book>) {
+        viewModelScope.launch {
+            bookRepository.deleteBooks(books)
+            loadBooks()
+        }
+    }
 }

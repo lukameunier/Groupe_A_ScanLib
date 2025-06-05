@@ -38,4 +38,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Checkbox de sélection -->
+    <ImageView
+        android:id="@+id/selectionIndicator"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/checkbox_desc_content"
+        android:src="@drawable/ic_checkbox_unchecked"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/bookCoverImage"
+        app:layout_constraintEnd_toEndOf="@id/bookCoverImage"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="2dp"
+        android:elevation="20dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

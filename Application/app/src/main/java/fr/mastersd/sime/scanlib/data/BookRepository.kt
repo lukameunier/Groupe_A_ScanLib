@@ -108,4 +108,8 @@ class BookRepository @Inject constructor(
     suspend fun getBooksWithoutScore(): List<Book> {
         return bookDao.getBooksByNoScore()
     }
+
+    suspend fun deleteBooks(books: List<Book>) {
+        bookDao.deleteBooks(books)
+    }
 }

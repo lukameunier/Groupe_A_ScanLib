@@ -45,6 +45,32 @@ class HomeFragment : Fragment() {
             findNavController().navigate(action)
         }
 
+        adapter.onSelectionModeChanged = { updateActionButtons() }
+
+        binding.deleteSelectedButton.setOnClickListener {
+            val toDelete = adapter.getSelectedBooks()
+            if (toDelete.isEmpty()) {
+                Toast.makeText(requireContext(), "Aucun livre sélectionné", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            AlertDialog.Builder(requireContext())
+                .setTitle("Supprimer la sélection ?")
+                .setMessage("Voulez-vous vraiment supprimer ces livres ?")
+                .setPositiveButton("Supprimer") { _, _ ->
+                    viewModel.deleteBooks(toDelete)
+                    adapter.exitSelectionMode()
+                }
+                .setNegativeButton("Annuler", null)
+                .show()
+        }
+
+        binding.rootLayout.setOnClickListener {
+            if (adapter.selectionMode) {
+                adapter.exitSelectionMode()
+                updateActionButtons()
+            }
+        }
+
         binding.bookRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.bookRecyclerView.adapter = adapter
 
@@ -153,6 +179,15 @@ class HomeFragment : Fragment() {
             .show()
     }
 
+    private fun updateActionButtons() {
+        if (adapter.selectionMode) {
+            binding.addBookButton.visibility = View.GONE
+            binding.deleteSelectedButton.visibility = View.VISIBLE
+        } else {
+            binding.addBookButton.visibility = View.VISIBLE
+            binding.deleteSelectedButton.visibility = View.GONE
+        }
+    }
 
     private fun showYearFilterDialog() {
         if (yearListCache.isEmpty()) {
