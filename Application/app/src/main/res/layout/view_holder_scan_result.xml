@@ -18,50 +18,57 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Colonne d'infos à droite -->
+    <!-- Colonne d'infos + CheckBox à droite -->
     <LinearLayout
         android:id="@+id/bookInfoContainer"
-        android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        app:layout_constraintTop_toTopOf="@id/bookCoverImage"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="@id/bookCoverImage"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/bookCoverImage"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="@id/bookCoverImage">
 
-        <TextView
-            android:id="@+id/bookTitle"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Titre du livre"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/secondary_background" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/bookTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Titre du livre"
+                android:textColor="@color/secondary_background"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <CheckBox
+                android:id="@+id/bookCheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/bookAuthor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Auteur(s)"
-            android:textSize="14sp"
-            android:textColor="@color/secondary_background" />
+            android:textColor="@color/secondary_background"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/bookPublisher"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Éditeur"
-            android:textSize="14sp"
-            android:textColor="@color/secondary_background" />
+            android:textColor="@color/secondary_background"
+            android:textSize="14sp" />
     </LinearLayout>
-    <!-- CheckBox -->
-    <CheckBox
-        android:id="@+id/bookCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="16dp"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
