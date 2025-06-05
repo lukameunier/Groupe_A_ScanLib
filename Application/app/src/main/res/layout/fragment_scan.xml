@@ -38,6 +38,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop" />
+
+        <View
+            android:id="@+id/focusIndicator"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/focus_ring"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="@id/cardCameraXContainer"
+            app:layout_constraintStart_toStartOf="@id/cardCameraXContainer"/>
+
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Vignette de l'image capturée -->

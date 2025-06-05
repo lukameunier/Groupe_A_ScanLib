@@ -137,9 +137,9 @@ class ScanFragment : Fragment() {
      * Ajoute le focus au toucher sur la preview CameraX
      */
     private fun setupTouchToFocus() {
-        binding.previewView.setOnTouchListener { _, event ->
+        binding.previewView.setOnTouchListener { v, event ->
             if (event.action == MotionEvent.ACTION_UP && camera != null) {
-                val factory: MeteringPointFactory = binding.previewView.meteringPointFactory
+                val factory = binding.previewView.meteringPointFactory
                 val point = factory.createPoint(event.x, event.y)
 
                 val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
@@ -147,10 +147,37 @@ class ScanFragment : Fragment() {
                     .build()
 
                 camera?.cameraControl?.startFocusAndMetering(action)
+
+                // Feedback visuel : affiche et anime le cercle
+                showFocusIndicator(event.x, event.y)
+                v.performClick()
             }
             true
         }
     }
+
+    /** Affiche le cercle de focus à la position du tap */
+    private fun showFocusIndicator(x: Float, y: Float) {
+        val indicator = binding.focusIndicator
+
+        // Positionne le cercle (ajuste pour le centrer)
+        indicator.translationX = x - indicator.width / 2
+        indicator.translationY = y - indicator.height / 2
+        indicator.visibility = View.VISIBLE
+        indicator.alpha = 1f
+        indicator.scaleX = 1f
+        indicator.scaleY = 1f
+
+        // Animation (zoom puis fade)
+        indicator.animate()
+            .scaleX(1.8f)
+            .scaleY(1.8f)
+            .alpha(0f)
+            .setDuration(600)
+            .withEndAction { indicator.visibility = View.GONE }
+            .start()
+    }
+
 
     private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
         val message = """
