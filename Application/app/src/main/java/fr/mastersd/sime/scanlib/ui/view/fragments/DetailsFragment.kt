@@ -1,12 +1,18 @@
 package fr.mastersd.sime.scanlib.ui.view.fragments
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import coil.load
+import android.content.Context
+import fr.mastersd.sime.scanlib.R
+import android.widget.EditText
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
 import androidx.core.view.isEmpty
@@ -23,6 +29,8 @@ import androidx.core.view.isEmpty
 class DetailsFragment : Fragment() {
 
     private lateinit var binding: FragmentDetailsBinding
+    private lateinit var editTexts: List<EditText>
+    private var isEditMode = false
 
     /**
      * Gonfle le layout XML avec ViewBinding
@@ -75,7 +83,73 @@ class DetailsFragment : Fragment() {
         if (binding.cardPreviewContainer.isEmpty()) {
             binding.cardPreviewContainer.addView(imageView)
         }
+
+        binding.root.setOnTouchListener { v, _ ->
+            if (isEditMode) {
+                setEditMode(false)
+                editTexts.forEach { it.clearFocus() }
+            }
+            v.performClick()
+            false
+        }
+
+        // Récupère tous les EditText à gérer
+        editTexts = listOf(
+            binding.authorName,
+            binding.bookGenreEditText,
+            binding.datePublisherEditText,
+            binding.editorEditText,
+            binding.pagesNumberEditText,
+            binding.isbnEditText
+        )
+
+        // Ajoute un listener de focus à chacun
+        editTexts.forEach { editText ->
+            editText.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    setEditMode(true)
+                }
+            }
+
+            // Gère la validation du clavier (IME action)
+            editText.setOnEditorActionListener { v, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    setEditMode(false)
+                    editText.clearFocus()
+                    // Ferme le clavier
+                    val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(editText.windowToken, 0)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    private fun setEditMode(enabled: Boolean) {
+        if (isEditMode == enabled) return
+        isEditMode = enabled
+        val background = if (enabled)
+            ContextCompat.getDrawable(requireContext(), R.drawable.edittext_border)
+        else
+            ContextCompat.getDrawable(requireContext(), android.R.color.transparent)
+
+        val targetPadding = if (enabled) 10 else 0
+        editTexts.forEach {
+            it.background = background
+            animateEditTextPadding(it, targetPadding)
+        }
+    }
+
+    fun animateEditTextPadding(editText: EditText, toPadding: Int, duration: Long = 250) {
+        val fromPadding = editText.paddingLeft
+        val animator = ValueAnimator.ofInt(fromPadding, toPadding)
+        animator.duration = duration
+        animator.addUpdateListener {
+            val value = it.animatedValue as Int
+            editText.setPadding(value, value, value, value)
+        }
+        animator.start()
     }
 }
-
-

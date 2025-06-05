@@ -80,8 +80,6 @@ class ScanFragment : Fragment() {
             }
         }
 
-
-
         setupObservers()
         setupListeners()
         setupTouchToFocus()
