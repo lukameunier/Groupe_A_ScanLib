@@ -6,12 +6,16 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.MeteringPointFactory
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
@@ -24,12 +28,6 @@ import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 
-/**
- * Fragment responsable de la capture d'image, de la détection de tranches de livres, de l'extraction OCR, interrogation de l'API Google Books via viewmodel
- *
- * @see BookViewModel pour la logique de synchronisation
- * @see ScanViewModel pour la logique de traitement d'image
- */
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
     /* ----- initialisation ----- */
@@ -37,17 +35,15 @@ class ScanFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: BookViewModel by viewModels()
-    private val scanViewModel: ScanViewModel by viewModels() // MODIF MVVM : nouveau ViewModel pour traitement image
+    private val scanViewModel: ScanViewModel by viewModels()
 
     private val cameraProviderFuture by lazy {
         ProcessCameraProvider.getInstance(requireContext())
     }
 
     private var syncStartTime: Long = 0L
+    private var camera: Camera? = null // Pour gérer le focus au toucher
 
-    /**
-     * Lance la demande de permission pour la caméra
-     */
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) startCamera() else handleCameraDenied()
@@ -62,7 +58,7 @@ class ScanFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
 
-        // observe les résultats de la synchronisation API Google Books
+        // Observe les résultats de la synchronisation API Google Books
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             val timeString = "️${duration} ms"
@@ -82,6 +78,7 @@ class ScanFragment : Fragment() {
 
         setupObservers()
         setupListeners()
+        setupTouchToFocus()
         checkCameraPermission()
     }
 
@@ -133,6 +130,25 @@ class ScanFragment : Fragment() {
                 }
                 .setNegativeButton("Fermer", null)
                 .show()
+        }
+    }
+
+    /**
+     * Ajoute le focus au toucher sur la preview CameraX
+     */
+    private fun setupTouchToFocus() {
+        binding.previewView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP && camera != null) {
+                val factory: MeteringPointFactory = binding.previewView.meteringPointFactory
+                val point = factory.createPoint(event.x, event.y)
+
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    .disableAutoCancel()
+                    .build()
+
+                camera?.cameraControl?.startFocusAndMetering(action)
+            }
+            true
         }
     }
 
@@ -191,6 +207,9 @@ class ScanFragment : Fragment() {
         }
     }
 
+    /**
+     * Démarre la caméra et stocke la référence Camera pour le focus au toucher
+     */
     private fun startCamera() {
         cameraProviderFuture.addListener({
             val provider = cameraProviderFuture.get()
@@ -207,7 +226,7 @@ class ScanFragment : Fragment() {
 
             try {
                 provider.unbindAll()
-                provider.bindToLifecycle(
+                camera = provider.bindToLifecycle(
                     this,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     preview,
@@ -224,11 +243,10 @@ class ScanFragment : Fragment() {
         findNavController().navigateUp()
     }
 
-//================================================================================
-//================================================================================
-// !: eliminer les doublants avec vm => déplacer le logique de lecture ocr et detection dans vm pour isoler l'affichage et la capture ---> temps de traitement ?
-// !: injection via Hilt pour les appels à la bd
-// ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
-//================================================================================
-//================================================================================
+    //================================================================================
+    // !: eliminer les doublants avec vm => déplacer le logique de lecture ocr et detection dans vm pour isoler l'affichage et la capture ---> temps de traitement ?
+    // !: injection via Hilt pour les appels à la bd
+    // ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
+    //================================================================================
+
 }
