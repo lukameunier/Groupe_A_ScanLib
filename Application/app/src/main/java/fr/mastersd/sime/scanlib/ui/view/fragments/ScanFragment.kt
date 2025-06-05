@@ -58,6 +58,33 @@ class ScanFragment : Fragment() {
         return binding.root
     }
 
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//        viewModel.setContext(requireContext())
+//
+//        // observe les résultats de la synchronisation API Google Books
+//        viewModel.syncResult.observe(viewLifecycleOwner) { result ->
+//            val duration = System.currentTimeMillis() - syncStartTime
+//            val timeString = "️${duration} ms"
+//
+//            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
+//
+//            if (result.foundBooks.isNotEmpty()) {
+//                if (result.foundBooks.size == 1) {
+//                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks, timeString)
+//                } else {
+//                    showBookListDialog(result.foundBooks, timeString)
+//                }
+//            } else {
+//                Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//
+//        setupObservers()
+//        setupListeners()
+//        checkCameraPermission()
+//    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setContext(requireContext())
@@ -65,16 +92,12 @@ class ScanFragment : Fragment() {
         // observe les résultats de la synchronisation API Google Books
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
-            val timeString = "️${duration} ms"
-
             Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
 
             if (result.foundBooks.isNotEmpty()) {
-                if (result.foundBooks.size == 1) {
-                    showBookDetailsDialog(result.foundBooks[0], result.foundBooks, timeString)
-                } else {
-                    showBookListDialog(result.foundBooks, timeString)
-                }
+                val action = ScanFragmentDirections
+                    .actionScanFragmentToScanResultFragment(result.foundBooks.toTypedArray())
+                findNavController().navigate(action)
             } else {
                 Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
             }
@@ -84,6 +107,7 @@ class ScanFragment : Fragment() {
         setupListeners()
         checkCameraPermission()
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

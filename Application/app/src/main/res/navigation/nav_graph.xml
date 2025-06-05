@@ -17,6 +17,7 @@
             android:id="@+id/action_homeFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/scanFragment"
         android:name="fr.mastersd.sime.scanlib.ui.view.fragments.ScanFragment"
@@ -25,20 +26,39 @@
         <action
             android:id="@+id/action_scanFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_scanFragment_to_scanResultFragment"
+            app:destination="@id/scanResultFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/detailsFragment"
         android:name="fr.mastersd.sime.scanlib.ui.view.fragments.DetailsFragment"
         android:label="DetailsFragment"
         tools:layout="@layout/fragment_details">
-
         <argument
             android:name="book"
             app:argType="fr.mastersd.sime.scanlib.data.Book"
             app:nullable="false" />
-
         <action
             android:id="@+id/action_detailsFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/scanResultFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.ScanResultFragment"
+        android:label="Résultats du scan"
+        tools:layout="@layout/fragment_scan_result">
+
+        <argument
+            android:name="foundBooks"
+            app:argType="fr.mastersd.sime.scanlib.data.Book[]"
+            app:nullable="false" />
+
+        <action
+            android:id="@+id/action_scanResultFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment" />
+    </fragment>
+
+
 </navigation>

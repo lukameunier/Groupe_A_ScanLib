@@ -26,4 +26,5 @@
     <string name="erase_edit_button_text">Annuler les modifications</string>
     <string name="valid_button_text">Accepte les modifications</string>
     <string name="book_genre_edit_text">%s</string>
+    <string name="resultat_livres">Liste des livres trouvés</string>
 </resources>
