@@ -1,83 +1,102 @@
 package fr.mastersd.sime.scanlib.ui.viewmodel
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.graphics.RectF
+import android.graphics.*
 import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ml.BookSpineOCR
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class ScanViewModel @Inject constructor(
-    private val detector: BookSpineDetector,
-    private val ocr: BookSpineOCR
+    private val detector: BookSpineDetector,  // Détecteur d'emplacement des tranches de livres (bounding boxes)
+    private val ocr: BookSpineOCR              // OCR pour extraire du texte à partir des zones détectées
 ) : ViewModel() {
 
-    private val _processedImage = MutableLiveData<Bitmap>()
+    private val _processedImage = MutableLiveData<Bitmap>() // Image annotée avec les boîtes dessinées
     val processedImage: LiveData<Bitmap> = _processedImage
 
-    private val _ocrTexts = MutableLiveData<List<String>>()
+    private val _ocrTexts = MutableLiveData<List<String>>() // Textes extraits (titre + auteur estimé)
     val ocrTexts: LiveData<List<String>> = _ocrTexts
 
     /**
-     * Lance détection + OCR depuis le chemin d’une image.
+     * Fonction principale : détecte les tranches puis applique l'OCR.
+     * - Charge et fait pivoter l’image si besoin
+     * - Applique la détection
+     * - Dessine les boîtes de détection sur une copie de l’image
+     * - Extrait le texte de chaque boîte avec l’OCR
      */
     fun processImage(path: String) {
         viewModelScope.launch {
             val bitmap = getRotatedBitmap(path)
+
+            // Étape 1 : Détection des tranches
             val (boxes, modelSize) = detector.detect(bitmap)
+
+            // Étape 2 : Dessin des boîtes détectées
             val annotated = drawBoxesOnBitmap(bitmap, boxes, modelSize)
 
-            // Écrase l’image originale (ou pas, à toi de choisir)
+            // (optionnel) Remplace le fichier d’origine par l’image annotée
             FileOutputStream(path).use {
                 annotated.compress(Bitmap.CompressFormat.JPEG, 90, it)
             }
 
+            // Met à jour l’image à afficher dans l’UI
             _processedImage.postValue(annotated)
 
-            val texts = ocr.extractTextsFromBoxes(bitmap, boxes).filter { it.isNotBlank() }
+            // Étape 3 : OCR pour chaque zone détectée
+            val texts = ocr.extractTextsFromBoxes(bitmap, boxes)
+                .filter { it.isNotBlank() }
+
+            // Met à jour les textes OCR dans l’UI
             _ocrTexts.postValue(texts)
         }
     }
 
+    /**
+     * Lit une image à partir du disque, applique une rotation correcte selon les métadonnées EXIF.
+     */
     private fun getRotatedBitmap(path: String): Bitmap {
         val bmp = BitmapFactory.decodeFile(path)
         val exif = ExifInterface(path)
         val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+
         val matrix = Matrix().apply {
             when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90   -> postRotate(90f)
                 ExifInterface.ORIENTATION_ROTATE_180  -> postRotate(180f)
                 ExifInterface.ORIENTATION_ROTATE_270  -> postRotate(270f)
+                // Aucun cas pour NORMAL → pas de rotation
             }
         }
+
         return Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
     }
 
+    /**
+     * Dessine les boîtes (RectF) détectées sur une copie de l’image.
+     * On ajuste les coordonnées selon la résolution réelle de l’image.
+     */
     private fun drawBoxesOnBitmap(base: Bitmap, boxes: List<RectF>, inputSize: Size): Bitmap {
         val output = base.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(output)
 
+        // Rapport de redimensionnement entre l'image d'entrée du modèle et l'image réelle
         val scaleX = base.width.toFloat() / inputSize.width
         val scaleY = base.height.toFloat() / inputSize.height
 
         val paint = Paint().apply {
             color = Color.RED
             style = Paint.Style.STROKE
-            strokeWidth = 50f
+            strokeWidth = 50f // Largeur des bordures de boîte
             isAntiAlias = true
         }
 
+        // Redimensionne et dessine chaque boîte
         boxes.forEach { box ->
             val scaledBox = RectF(
                 box.left * scaleX,

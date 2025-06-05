@@ -7,10 +7,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.mastersd.sime.scanlib.data.Book
-import fr.mastersd.sime.scanlib.data.BookDatabase
-import fr.mastersd.sime.scanlib.data.BookRepository
-import fr.mastersd.sime.scanlib.data.BookSyncResult
+import fr.mastersd.sime.scanlib.data.*
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -22,19 +19,26 @@ class BookViewModel @Inject constructor() : ViewModel() {
     private var imageCapture: ImageCapture? = null
     private var appContext: Context? = null
 
+    // Contient le chemin de la dernière image capturée
     private val _lastImagePath = MutableLiveData<String>()
     val lastImagePath: LiveData<String> get() = _lastImagePath
 
+    // Résultat du processus de synchronisation avec Google Books API
     private val _syncResult = MutableLiveData<BookSyncResult>()
     val syncResult: LiveData<BookSyncResult> get() = _syncResult
 
+    // Liste des livres récupérés depuis la base de données locale (Room)
     private val _booksFromDb = MutableLiveData<List<Book>>()
     val booksFromDb: LiveData<List<Book>> get() = _booksFromDb
 
+    // Liste complète des livres chargée via une autre méthode
     private val _allBooks = MutableLiveData<List<Book>>()
     val allBooks: LiveData<List<Book>> get() = _allBooks
 
-    // Initialise Room + Repository
+    /**
+     * Initialise la base de données locale Room et le repository.
+     * À appeler avant toute interaction avec le repository.
+     */
     fun setContext(context: Context) {
         appContext = context.applicationContext
         val db = BookDatabase.getDatabase(appContext!!)
@@ -42,10 +46,17 @@ class BookViewModel @Inject constructor() : ViewModel() {
         bookRepository = BookRepository(bookDao = bookDao)
     }
 
+    /**
+     * Enregistre une instance d'ImageCapture (CameraX) pour effectuer les captures plus tard.
+     */
     fun setImageCapture(capture: ImageCapture) {
         imageCapture = capture
     }
 
+    /**
+     * Capture une image à l’aide de CameraX et sauvegarde le fichier dans un répertoire temporaire.
+     * Si la capture réussit, le chemin est publié dans le LiveData lastImagePath.
+     */
     fun captureImage() {
         val context = appContext ?: return
         val captureDir = File(context.cacheDir, "captures").apply { mkdirs() }
@@ -67,12 +78,18 @@ class BookViewModel @Inject constructor() : ViewModel() {
         )
     }
 
+    /**
+     * Retourne la liste des images déjà capturées, stockées dans le répertoire temporaire.
+     */
     fun getAllCapturedImages(): List<File> {
         val context = appContext ?: return emptyList()
         val dir = File(context.cacheDir, "captures")
         return dir.listFiles()?.toList() ?: emptyList()
     }
 
+    /**
+     * Récupère tous les livres de la base de données locale Room et les publie via booksFromDb.
+     */
     fun fetchBooksFromDb(context: Context) {
         viewModelScope.launch {
             val db = BookDatabase.getDatabase(context)
@@ -81,6 +98,10 @@ class BookViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    /**
+     * Lance une requête vers Google Books API pour récupérer les informations associées
+     * aux textes détectés (issus de l’OCR). Le résultat est publié dans syncResult.
+     */
     fun syncBooksFromValTexts(texts: List<String>) {
         viewModelScope.launch {
             val result = bookRepository.syncBooksFromValTexts(texts)
@@ -88,6 +109,10 @@ class BookViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    /**
+     * Charge tous les livres depuis la base de données en utilisant le repository.
+     * Les livres sont publiés dans allBooks.
+     */
     fun loadBooksFromDb() {
         if (!::bookRepository.isInitialized) return
         viewModelScope.launch {
@@ -96,6 +121,10 @@ class BookViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    /**
+     * Insère un livre dans la base de données locale.
+     * À utiliser uniquement après sélection manuelle par l'utilisateur.
+     */
     fun insertBook(book: Book) {
         if (!::bookRepository.isInitialized) return
         viewModelScope.launch {

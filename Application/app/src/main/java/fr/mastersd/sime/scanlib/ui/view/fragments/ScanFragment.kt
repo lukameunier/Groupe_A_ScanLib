@@ -11,11 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.FocusMeteringAction
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -24,16 +20,17 @@ import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.R
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
-import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
-    /* ----- initialisation ----- */
+
+    // Liaison avec le layout XML
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
 
+    // ViewModels pour la capture et le traitement
     private val viewModel: BookViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
 
@@ -41,13 +38,13 @@ class ScanFragment : Fragment() {
         ProcessCameraProvider.getInstance(requireContext())
     }
 
-    private var syncStartTime: Long = 0L
     private var camera: Camera? = null
+    private var syncStartTime: Long = 0L
 
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) startCamera() else handleCameraDenied()
-        }
+    // Gère la demande de permission caméra
+    private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) startCamera() else handleCameraDenied()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentScanBinding.inflate(inflater, container, false)
@@ -56,10 +53,11 @@ class ScanFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialisation obligatoire de Room (BookRepository)
         viewModel.setContext(requireContext())
 
-        // Observe les résultats après le traitement OCR + appel API,
-        // puis navigue vers ScanResultFragment en supprimant ScanFragment de la pile
+        // Observe les résultats du traitement OCR + appel API
         viewModel.syncResult.observe(viewLifecycleOwner) { result ->
             val duration = System.currentTimeMillis() - syncStartTime
             Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
@@ -70,7 +68,7 @@ class ScanFragment : Fragment() {
 
                 val navOptions = androidx.navigation.navOptions {
                     popUpTo(R.id.scanFragment) {
-                        inclusive = true
+                        inclusive = true // supprime ScanFragment de la pile
                     }
                 }
 
@@ -80,14 +78,11 @@ class ScanFragment : Fragment() {
             }
         }
 
-
-
         setupObservers()
         setupListeners()
         setupTouchToFocus()
         checkCameraPermission()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -95,7 +90,10 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Observe les chemins d'image et résultats du traitement (MVVM)
+     * Observe les données des ViewModels :
+     * - image capturée
+     * - image traitée (bitmap)
+     * - textes extraits par OCR
      */
     private fun setupObservers() {
         viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
@@ -118,7 +116,9 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Configure les boutons de capture et aperçu miniature (actions user)
+     * Configure les interactions utilisateur :
+     * - capture avec le bouton central
+     * - aperçu des images précédentes
      */
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
@@ -141,7 +141,7 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Ajoute le focus au toucher sur la preview CameraX
+     * Ajoute le focus manuel au toucher dans CameraX
      */
     private fun setupTouchToFocus() {
         binding.previewView.setOnTouchListener { v, event ->
@@ -162,7 +162,9 @@ class ScanFragment : Fragment() {
         }
     }
 
-    /** Affiche le cercle de focus à la position du tap */
+    /**
+     * Affiche l’animation circulaire de mise au point
+     */
     private fun showFocusIndicator(x: Float, y: Float) {
         val indicator = binding.focusIndicator
 
@@ -182,45 +184,9 @@ class ScanFragment : Fragment() {
             .start()
     }
 
-
-    private fun showBookDetailsDialog(book: Book, allBooks: List<Book>, duration: String) {
-        val message = """
-            $duration
-
-            📚 Titre            : ${book.title}
-            👤 Auteur(s)        : ${book.authors.joinToString()}
-            🏢 Éditeur          : ${book.publisher}
-            📅 Date de pub.     : ${book.publishedDate}
-            📝 Description      : ${book.description}
-            📄 Pages            : ${book.pageCount}
-            🔗 Lien             : ${book.infoLink ?: "N/A"}
-            🖼️ Couverture       : ${book.thumbnailUrl ?: "Pas d'image disponible"}
-        """.trimIndent()
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Détails du livre")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .setNegativeButton("Voir autres résultats") { _, _ ->
-                showBookListDialog(allBooks, duration)
-            }
-            .show()
-    }
-
-    private fun showBookListDialog(books: List<Book>, duration: String) {
-        val titledBooks = books.mapIndexed { index, book ->
-            "Livre ${index + 1} : ${book.title}"
-        }.toTypedArray()
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Livres détectés (${books.size}) – $duration")
-            .setItems(titledBooks) { _, index ->
-                showBookDetailsDialog(books[index], books, duration)
-            }
-            .setNegativeButton("Fermer", null)
-            .show()
-    }
-
+    /**
+     * Vérifie la permission caméra et lance la caméra si accordée
+     */
     private fun checkCameraPermission() {
         when {
             ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> startCamera()
@@ -239,7 +205,7 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Démarre la caméra et stocke la référence Camera pour le focus au toucher
+     * Initialise CameraX et bind le flux sur la preview
      */
     private fun startCamera() {
         cameraProviderFuture.addListener({
@@ -269,14 +235,11 @@ class ScanFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
+    /**
+     * Retourne à l'écran précédent si permission refusée
+     */
     private fun handleCameraDenied() {
         Toast.makeText(requireContext(), "Permission caméra refusée", Toast.LENGTH_SHORT).show()
         findNavController().navigateUp()
     }
-
-    //================================================================================
-    // !: eliminer les doublants avec vm => déplacer le logique de lecture ocr et detection dans vm pour isoler l'affichage et la capture ---> temps de traitement ?
-    // !: injection via Hilt pour les appels à la bd
-    // ?: séparer la logique => new [ImageProcessingHelper]: drawBoxesOnBitmap, getRotatedBitmap
-    //================================================================================
 }
