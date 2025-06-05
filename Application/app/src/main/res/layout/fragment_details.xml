@@ -235,4 +235,19 @@
         app:layout_constraintEnd_toEndOf="@id/separator"
         app:layout_constraintTop_toBottomOf="@id/synopsis_title"/>
 
+    <!-- Bouton Enregistrer un livre -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/save_button"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/save_button_text"
+        android:backgroundTint="@color/primary_button"
+        android:textColor="@color/secondary_text"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
