@@ -55,4 +55,13 @@
             android:textSize="14sp"
             android:textColor="@color/secondary_background" />
     </LinearLayout>
+    <!-- CheckBox -->
+    <CheckBox
+        android:id="@+id/bookCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="16dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

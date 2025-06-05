@@ -39,13 +39,6 @@ class BookRepository @Inject constructor(
                 Log.d("BookSync", "🔗 Lien          : ${book.infoLink}")
                 Log.d("BookSync", "🖼️ Couverture    : ${book.thumbnailUrl ?: "Pas d'image disponible"}")
 
-                try {
-                    bookDao.insertBooks(listOf(book))
-                    Log.d("BookSync", "💾 Livre inséré dans Room : ${book.title}")
-                } catch (e: Exception) {
-                    Log.e("BookSync", "❌ Erreur lors de l'insertion : ${e.message}")
-                }
-
                 foundBooks.add(book)
             }
         }

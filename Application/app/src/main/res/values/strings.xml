@@ -29,4 +29,5 @@
     <string name="checkbox_desc_content">Checkbox de sélection</string>
     <string name="supress_book_text">Supprimer la sélection</string>
     <string name="resultat_livres">Liste des livres trouvés</string>
+    <string name="enregistrer">Enregistrer</string>
 </resources>

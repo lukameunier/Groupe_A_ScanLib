@@ -5,14 +5,11 @@ import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookDatabase
 import fr.mastersd.sime.scanlib.data.BookRepository
-import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookSyncResult
 import kotlinx.coroutines.launch
 import java.io.File
@@ -22,14 +19,22 @@ import javax.inject.Inject
 class BookViewModel @Inject constructor() : ViewModel() {
 
     private lateinit var bookRepository: BookRepository
-
     private var imageCapture: ImageCapture? = null
     private var appContext: Context? = null
 
     private val _lastImagePath = MutableLiveData<String>()
     val lastImagePath: LiveData<String> get() = _lastImagePath
 
+    private val _syncResult = MutableLiveData<BookSyncResult>()
+    val syncResult: LiveData<BookSyncResult> get() = _syncResult
 
+    private val _booksFromDb = MutableLiveData<List<Book>>()
+    val booksFromDb: LiveData<List<Book>> get() = _booksFromDb
+
+    private val _allBooks = MutableLiveData<List<Book>>()
+    val allBooks: LiveData<List<Book>> get() = _allBooks
+
+    // Initialise Room + Repository
     fun setContext(context: Context) {
         appContext = context.applicationContext
         val db = BookDatabase.getDatabase(appContext!!)
@@ -43,14 +48,8 @@ class BookViewModel @Inject constructor() : ViewModel() {
 
     fun captureImage() {
         val context = appContext ?: return
-
         val captureDir = File(context.cacheDir, "captures").apply { mkdirs() }
-
-        val photoFile = File(
-            captureDir,
-            "${System.currentTimeMillis()}.jpg"
-        )
-
+        val photoFile = File(captureDir, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         imageCapture?.takePicture(
@@ -74,12 +73,6 @@ class BookViewModel @Inject constructor() : ViewModel() {
         return dir.listFiles()?.toList() ?: emptyList()
     }
 
-    private val _syncResult = MutableLiveData<BookSyncResult>()
-    val syncResult: LiveData<BookSyncResult> get() = _syncResult
-
-    private val _booksFromDb = MutableLiveData<List<Book>>()
-    val booksFromDb: LiveData<List<Book>> get() = _booksFromDb
-
     fun fetchBooksFromDb(context: Context) {
         viewModelScope.launch {
             val db = BookDatabase.getDatabase(context)
@@ -95,16 +88,18 @@ class BookViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-private val _allBooks = MutableLiveData<List<Book>>()
-    val allBooks: LiveData<List<Book>> get() = _allBooks
-
-    fun loadBooksFromDb(context: Context) {
+    fun loadBooksFromDb() {
+        if (!::bookRepository.isInitialized) return
         viewModelScope.launch {
-            val db = BookDatabase.getDatabase(context)
-            val bookDao = db.bookDao()
-            val repo = BookRepository(bookDao)
-            val books = repo.getAllBooks()
+            val books = bookRepository.getAllBooks()
             _allBooks.postValue(books)
+        }
+    }
+
+    fun insertBook(book: Book) {
+        if (!::bookRepository.isInitialized) return
+        viewModelScope.launch {
+            bookRepository.insertBook(book)
         }
     }
 }

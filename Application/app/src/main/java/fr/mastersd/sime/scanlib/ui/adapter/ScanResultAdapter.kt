@@ -11,12 +11,15 @@ class ScanResultAdapter(
     private val onBookClick: (Book) -> Unit
 ) : RecyclerView.Adapter<ScanResultAdapter.ScanResultViewHolder>() {
 
+    private val selectedBooks = mutableSetOf<Book>()
     private var bookList: List<Book> = emptyList()
 
     fun submitList(list: List<Book>) {
         bookList = list
         notifyDataSetChanged()
     }
+
+    fun getSelectedBooks(): List<Book> = selectedBooks.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScanResultViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -38,6 +41,15 @@ class ScanResultAdapter(
             bookAuthor.text = book.authors.joinToString()
             bookPublisher.text = book.publisher ?: "Éditeur inconnu"
 
+            // Sélection checkbox (évite double déclenchement)
+            bookCheckBox.setOnCheckedChangeListener(null)
+            bookCheckBox.isChecked = selectedBooks.contains(book)
+            bookCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) selectedBooks.add(book)
+                else selectedBooks.remove(book)
+            }
+
+            // Clic global : toujours actif
             root.setOnClickListener {
                 onBookClick(book)
             }
