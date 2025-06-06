@@ -102,6 +102,10 @@ class BookRepository @Inject constructor(
         return bookDao.getBooksByNoScore()
     }
 
+    suspend fun updateBook(book: Book) {
+        bookDao.updateBook(book)
+    }
+
     suspend fun deleteBooks(books: List<Book>) {
         bookDao.deleteBooks(books)
     }

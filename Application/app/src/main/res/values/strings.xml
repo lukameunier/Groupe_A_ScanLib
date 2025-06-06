@@ -30,4 +30,8 @@
     <string name="supress_book_text">Supprimer la sélection</string>
     <string name="resultat_livres">Liste des livres trouvés</string>
     <string name="enregistrer">Enregistrer</string>
+    <string name="save_button_text">Enregistrer</string>
+    <string name="galerie_button_text">Importer depuis la galerie</string>
+    <string name="manual_button_text">Ajouter manuellement</string>
+    <string name="scan_button_text">Scanner la tranche</string>
 </resources>
