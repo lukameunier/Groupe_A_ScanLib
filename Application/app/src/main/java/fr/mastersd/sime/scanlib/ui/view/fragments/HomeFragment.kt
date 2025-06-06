@@ -6,12 +6,16 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import fr.mastersd.sime.scanlib.R
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
@@ -92,9 +96,26 @@ class HomeFragment : Fragment() {
 
         // Ajouter un livre
         binding.addBookButton.setOnClickListener {
-            val action = HomeFragmentDirections.actionHomeFragmentToScanFragment()
-            findNavController().navigate(action)
+            val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_add_book, null)
+            val dialog = BottomSheetDialog(requireContext())
+            dialog.setContentView(sheetView)
+            dialog.show()
+
+            sheetView.findViewById<MaterialButton>(R.id.option_scan).setOnClickListener {
+                val action = HomeFragmentDirections.actionHomeFragmentToScanFragment()
+                findNavController().navigate(action)
+                dialog.dismiss()
+            }
+            sheetView.findViewById<MaterialButton>(R.id.option_manual).setOnClickListener {
+                Toast.makeText(requireContext(), "Ajout manuel à implémenter", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            sheetView.findViewById<MaterialButton>(R.id.option_import).setOnClickListener {
+                Toast.makeText(requireContext(), "Import depuis un fichier à implémenter", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
         }
+
 
         // Recherche dynamique
         binding.searchBar.addTextChangedListener(object : TextWatcher {
@@ -102,7 +123,7 @@ class HomeFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val keyword = s.toString()
                 if (keyword.length >= 2) {
-                    viewModel.searchByKeyword(keyword) // ✅ nom correct
+                    viewModel.searchByKeyword(keyword)
                 } else {
                     viewModel.loadBooks()
                 }
