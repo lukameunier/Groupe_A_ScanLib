@@ -34,4 +34,5 @@
     <string name="galerie_button_text">Importer depuis la galerie</string>
     <string name="manual_button_text">Ajouter manuellement</string>
     <string name="scan_button_text">Scanner la tranche</string>
+    <string name="book_cover">Couverture du livre</string>
 </resources>

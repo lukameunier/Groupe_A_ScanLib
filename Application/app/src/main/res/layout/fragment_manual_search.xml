@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary_background">
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/searchFieldsGroup"
+        android:visibility="visible"
+        app:constraint_referenced_ids="editTitle,editAuthor,editPublisher,buttonSearch"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"/>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/resultGroup"
+        android:visibility="gone"
+        app:constraint_referenced_ids="bookTitle,cardPreviewContainer,
+        author_name,book_genre,book_genre_edit_text,date_publisher,date_publisher_edit_text,
+        editor,editor_edit_text,pages_number,pages_number_edit_text,isbn,isbn_edit_text,
+        synopsis_title,synopsis_content,separator,validButton"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"/>
+
+    <!-- Bandeau en haut -->
+    <TextView
+        android:id="@+id/headerTitle"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/secondary_background"
+        android:gravity="center"
+        android:text="Recherche manuelle"
+        android:textColor="@color/secondary_text"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Champs de recherche -->
+    <EditText
+        android:id="@+id/editTitle"
+        android:hint="Titre"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/secondary_background"
+        android:textColorHint="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/headerTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"/>
+
+    <EditText
+        android:id="@+id/editAuthor"
+        android:hint="Auteur"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/secondary_background"
+        android:textColorHint="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/editTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"/>
+
+    <EditText
+        android:id="@+id/editPublisher"
+        android:hint="Éditeur"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/secondary_background"
+        android:textColorHint="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/editAuthor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonSearch"
+        android:text="Rechercher"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/secondary_text"
+        app:backgroundTint="@color/primary_button"
+        app:cornerRadius="16dp"
+        app:iconTint="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/editPublisher"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"/>
+
+    <!-- Titre du livre -->
+    <TextView
+        android:id="@+id/bookTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/book_title"
+        android:textSize="25sp"
+        android:textAlignment="center"
+        android:textColor="@color/secondary_background"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerTitle"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <!-- Preview de la couverture du livre -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardPreviewContainer"
+        android:layout_width="120dp"
+        android:layout_height="180dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
+        app:layout_constraintStart_toStartOf="@id/bookTitle"
+        app:layout_constraintTop_toBottomOf="@id/bookTitle">
+
+        <!-- Ajoute un ImageView pour l'affichage de la couverture -->
+        <ImageView
+            android:id="@+id/bookCoverImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/book_cover"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Nom de l'auteur -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/author_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/author_name_text"
+        android:textColor="@color/secondary_background"
+        android:background="@android:color/transparent"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toTopOf="@id/cardPreviewContainer"
+        app:layout_constraintBottom_toTopOf="@id/book_genre"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@+id/book_genre_edit_text"/>
+
+    <!-- Genre du livre -->
+    <TextView
+        android:id="@+id/book_genre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/genre_text"
+        android:textColor="@color/secondary_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toBottomOf="@id/author_name"
+        app:layout_constraintBottom_toTopOf="@id/date_publisher"/>
+
+    <!-- Genre du livre (éditable) -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/book_genre_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:text="@string/book_genre_edit_text"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/book_genre"
+        app:layout_constraintStart_toEndOf="@id/book_genre"
+        app:layout_constraintTop_toTopOf="@id/book_genre"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@+id/date_publisher_edit_text"/>
+
+    <!-- Date de publication -->
+    <TextView
+        android:id="@+id/date_publisher"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/date_publisher_text"
+        android:textColor="@color/secondary_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toBottomOf="@id/book_genre"
+        app:layout_constraintBottom_toTopOf="@id/editor"/>
+
+    <!-- Date de publication (éditable) -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/date_publisher_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:inputType="date"
+        android:text="@string/book_genre_edit_text"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/date_publisher"
+        app:layout_constraintStart_toEndOf="@id/date_publisher"
+        app:layout_constraintTop_toTopOf="@id/date_publisher"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@+id/editor_edit_text"/>
+
+    <!-- Éditeur -->
+    <TextView
+        android:id="@+id/editor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/editor_name_text"
+        android:textColor="@color/secondary_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toBottomOf="@id/date_publisher"
+        app:layout_constraintBottom_toTopOf="@id/pages_number"/>
+
+    <!-- Éditeur (éditable) -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/editor_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:inputType="date"
+        android:text="@string/book_genre_edit_text"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/editor"
+        app:layout_constraintStart_toEndOf="@id/editor"
+        app:layout_constraintTop_toTopOf="@id/editor"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@+id/pages_number_edit_text"/>
+
+    <!-- Nombre de pages -->
+    <TextView
+        android:id="@+id/pages_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pages_number_text"
+        android:textColor="@color/secondary_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toBottomOf="@id/editor"
+        app:layout_constraintBottom_toTopOf="@id/isbn"/>
+
+    <!-- Nombre de pages (éditable) -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/pages_number_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:text="@string/book_genre_edit_text"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/pages_number"
+        app:layout_constraintStart_toEndOf="@id/pages_number"
+        app:layout_constraintTop_toTopOf="@id/pages_number"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@+id/isbn_edit_text"/>
+
+    <!-- ISBN -->
+    <TextView
+        android:id="@+id/isbn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/isbn_code"
+        android:textColor="@color/secondary_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/cardPreviewContainer"
+        app:layout_constraintTop_toBottomOf="@id/pages_number"
+        app:layout_constraintBottom_toBottomOf="@id/cardPreviewContainer" />
+
+    <!-- ISBN (éditable) -->
+    <EditText
+        style="@style/FlatEditText"
+        android:id="@+id/isbn_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:text="@string/book_genre_edit_text"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/isbn"
+        app:layout_constraintStart_toEndOf="@id/isbn"
+        app:layout_constraintTop_toTopOf="@id/isbn"
+        android:imeOptions="actionDone"/>
+
+    <!-- Ligne séparatrice -->
+    <View
+        android:id="@+id/separator"
+        android:layout_width="0dp"
+        android:layout_height="4dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/rounded_separator"
+        app:layout_constraintTop_toBottomOf="@id/cardPreviewContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp" />
+
+    <!-- Titre synopsis -->
+    <TextView
+        android:id="@+id/synopsis_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/synopsis_title"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/secondary_background"
+        app:layout_constraintStart_toStartOf="@id/separator"
+        app:layout_constraintTop_toBottomOf="@id/separator"/>
+
+    <!-- Corps du synopsis -->
+    <TextView
+        android:id="@+id/synopsis_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/synpsosis_text"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:textColor="@color/secondary_background"
+        app:layout_constraintStart_toStartOf="@id/synopsis_title"
+        app:layout_constraintEnd_toEndOf="@id/separator"
+        app:layout_constraintTop_toBottomOf="@id/synopsis_title"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/validButton"
+        android:text="Ajouter à la bibliothèque"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/secondary_text"
+        app:backgroundTint="@color/primary_button"
+        app:cornerRadius="16dp"
+        app:iconTint="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/synopsis_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
