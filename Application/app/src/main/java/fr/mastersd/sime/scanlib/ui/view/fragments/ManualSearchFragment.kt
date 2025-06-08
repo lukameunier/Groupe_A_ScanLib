@@ -43,13 +43,11 @@ class ManualSearchFragment : Fragment() {
             val author = binding.editAuthor.text.toString().trim()
             val publisher = binding.editPublisher.text.toString().trim()
 
-            // Petite validation
             if (title.isBlank() && author.isBlank() && publisher.isBlank()) {
                 Toast.makeText(requireContext(), "Remplis au moins un champ", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Lancer la recherche
             searchBook(title, author, publisher)
             binding.validButton.setOnClickListener {
                 val bookToAdd = lastFoundBook
@@ -69,31 +67,22 @@ class ManualSearchFragment : Fragment() {
     }
 
     private fun searchBook(title: String, author: String, publisher: String) {
-        // Construire la requête "intelligente"
         val query = buildQuery(title, author, publisher)
         lifecycleScope.launch {
             val book = googleBooksService.searchBook(query)
             if (book == null) {
                 Toast.makeText(requireContext(), "Aucun livre trouvé", Toast.LENGTH_SHORT).show()
             } else {
-                // 1. Remplis tous les champs avec les valeurs de 'book'
                 binding.bookTitle.text = book.title
-
-                // Si plusieurs auteurs, on les affiche séparés par une virgule
                 binding.authorName.setText(book.authors.joinToString(", "))
-
                 binding.bookGenreEditText.setText(book.categories?.joinToString(", ") ?: "")
                 binding.datePublisherEditText.setText(book.publishedDate ?: "")
                 binding.editorEditText.setText(book.publisher ?: "")
                 binding.pagesNumberEditText.setText(book.pageCount.toString())
                 binding.isbnEditText.setText(book.industryIdentifiers?.joinToString(", ") ?: "")
                 binding.synopsisContent.text = book.description ?: ""
-
-                // Pour l'image (avec Coil ou Glide, exemple avec Coil) :
-                // Assure-toi d'avoir importé coil dans le module UI
                 binding.bookCoverImage.load(book.thumbnailUrl)
 
-                // 2. Puis lance l'animation
                 lastFoundBook = book
                 animateSearchToResult()
             }
@@ -136,7 +125,6 @@ class ManualSearchFragment : Fragment() {
             binding.validButton
         )
 
-        // Animation du formulaire vers le haut
         searchViews.forEachIndexed { i, v ->
             v.animate()
                 .translationY(-v.height.toFloat() - 100)
@@ -147,7 +135,6 @@ class ManualSearchFragment : Fragment() {
                 .start()
         }
 
-        // Apparition des résultats après un délai
         resultViews.forEachIndexed { i, v ->
             v.visibility = View.VISIBLE
             v.translationY = 80f

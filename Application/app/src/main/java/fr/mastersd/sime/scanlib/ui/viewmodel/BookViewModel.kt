@@ -79,15 +79,6 @@ class BookViewModel @Inject constructor() : ViewModel() {
     }
 
     /**
-     * Retourne la liste des images déjà capturées, stockées dans le répertoire temporaire.
-     */
-    fun getAllCapturedImages(): List<File> {
-        val context = appContext ?: return emptyList()
-        val dir = File(context.cacheDir, "captures")
-        return dir.listFiles()?.toList() ?: emptyList()
-    }
-
-    /**
      * Récupère tous les livres de la base de données locale Room et les publie via booksFromDb.
      */
     fun fetchBooksFromDb(context: Context) {
