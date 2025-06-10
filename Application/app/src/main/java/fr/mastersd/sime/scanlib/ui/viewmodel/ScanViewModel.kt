@@ -5,6 +5,8 @@ import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.mastersd.sime.scanlib.data.Book
+import fr.mastersd.sime.scanlib.data.BookRepository
 import fr.mastersd.sime.scanlib.ml.BookSpineDetector
 import fr.mastersd.sime.scanlib.ml.BookSpineOCR
 import kotlinx.coroutines.launch
@@ -14,11 +16,15 @@ import javax.inject.Inject
 @HiltViewModel
 class ScanViewModel @Inject constructor(
     private val detector: BookSpineDetector,  // Détecteur d'emplacement des tranches de livres (bounding boxes)
-    private val ocr: BookSpineOCR              // OCR pour extraire du texte à partir des zones détectées
+    private val ocr: BookSpineOCR,              // OCR pour extraire du texte à partir des zones détectées
+    private val bookRepository: BookRepository
 ) : ViewModel() {
 
     private val _processedImage = MutableLiveData<Bitmap>() // Image annotée avec les boîtes dessinées
     val processedImage: LiveData<Bitmap> = _processedImage
+
+    private val _foundBooks = MutableLiveData<List<Book>>()
+    val foundBooks: LiveData<List<Book>> = _foundBooks
 
     private val _ocrTexts = MutableLiveData<List<String>>() // Textes extraits (titre + auteur estimé)
     val ocrTexts: LiveData<List<String>> = _ocrTexts
@@ -106,5 +112,20 @@ class ScanViewModel @Inject constructor(
         }
 
         return output
+    }
+
+    fun processImageAndFetchBooks(path: String) {
+        viewModelScope.launch {
+            val bitmap = getRotatedBitmap(path)
+            val (boxes, modelSize) = detector.detect(bitmap)
+            val texts = ocr.extractTextsFromBoxes(bitmap, boxes).filter { it.isNotBlank() }
+
+            if (texts.isEmpty()) {
+                _foundBooks.postValue(emptyList())
+            } else {
+                val result = bookRepository.syncBooksFromValTexts(texts)
+                _foundBooks.postValue(result.foundBooks)
+            }
+        }
     }
 }
