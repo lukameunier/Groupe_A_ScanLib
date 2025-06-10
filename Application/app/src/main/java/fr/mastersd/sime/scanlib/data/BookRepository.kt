@@ -99,12 +99,4 @@ class BookRepository @Inject constructor(
         bookDao.deleteBooks(books)
     }
 
-    suspend fun getFavoriteBooks(): List<Book> {
-        return bookDao.getFavoriteBooks()
-    }
-
-    suspend fun setBookFavorite(bookId: String, favorite: Boolean) {
-        bookDao.updateFavoriteStatus(bookId, favorite)
-    }
-
 }

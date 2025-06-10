@@ -129,11 +129,5 @@ interface BookDao {
     suspend fun deleteBooks(books: List<Book>)
 
     //==================================================================================
-    /* Favoris */
-    @Query("SELECT * FROM books WHERE isFavorite = 1")
-    suspend fun getFavoriteBooks(): List<Book>
-
-    @Query("UPDATE books SET isFavorite = :favorite WHERE id = :bookId")
-    suspend fun updateFavoriteStatus(bookId: String, favorite: Boolean)
 
 }
