@@ -129,8 +129,11 @@ interface BookDao {
     suspend fun deleteBooks(books: List<Book>)
 
     //==================================================================================
-    //==================================================================================
-    // //?//: méthode de mise à jour partielle d'un champ
-    //==================================================================================
-    //==================================================================================
+    /* Favoris */
+    @Query("SELECT * FROM books WHERE isFavorite = 1")
+    suspend fun getFavoriteBooks(): List<Book>
+
+    @Query("UPDATE books SET isFavorite = :favorite WHERE id = :bookId")
+    suspend fun updateFavoriteStatus(bookId: String, favorite: Boolean)
+
 }
