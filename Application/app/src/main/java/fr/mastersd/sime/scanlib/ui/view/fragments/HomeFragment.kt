@@ -179,6 +179,32 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Filtres réinitialisés", Toast.LENGTH_SHORT).show()
         }
 
+//======================================================
+        // Charger les groupes
+        viewModel.loadGroups()
+
+        binding.groupButton.setOnClickListener { anchor ->
+            val groups = viewModel.groups.value
+            if (groups.isNullOrEmpty()) {
+                Toast.makeText(requireContext(), "Aucun groupe de favoris", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val popup = PopupMenu(requireContext(), anchor)
+            groups.forEachIndexed { index, group ->
+                popup.menu.add(0, index, index, group.name)
+            }
+
+            popup.setOnMenuItemClickListener { item ->
+                val groupId = groups[item.itemId].id
+                viewModel.filterByGroup(groupId)
+                true
+            }
+
+            popup.show()
+        }
+
+//============================================
         // Charger les filtres
         viewModel.loadGenres()
         viewModel.loadYears()

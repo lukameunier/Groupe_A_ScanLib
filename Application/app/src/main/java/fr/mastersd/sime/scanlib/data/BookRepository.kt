@@ -9,7 +9,7 @@ import javax.inject.Inject
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
     val googleBooksService: GoogleBooksService = GoogleBooksService(),
-    private val favoriteDao: FavoriteGroupDao
+    private val favoriteGroupDao: FavoriteGroupDao
 ) {
 
     suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
@@ -100,11 +100,17 @@ class BookRepository @Inject constructor(
         bookDao.deleteBooks(books)
     }
 
-    suspend fun getAllFavoriteGroups() {
-        return favoriteDao.getAllGroupsWithBooks()
-            .mapNotNull { it }
+//=============================================================
+    suspend fun getAllFavoriteGroups(): List<FavoriteGroup> {
+        return favoriteGroupDao.getAllGroupsSimple()
     }
 
-    suspend fun getBooksByGroup(groupId: Long): List<Book>
+    suspend fun getBooksByGroup(groupId: Long): List<Book> {
+        return favoriteGroupDao.getBooksByGroup(groupId)
+    }
+
+    suspend fun insertFavoriteGroup(group: FavoriteGroup): Long {
+        return favoriteGroupDao.insertGroup(group)
+    }
 
 }
