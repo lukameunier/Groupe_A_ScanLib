@@ -34,5 +34,4 @@ data class Book(
     /*?*/ val country: String?, //pays origine ou publication
     /*?*/ val textSnippet: String?, //extrait de recherche: mots-clés
     val dateAjout: Long = System.currentTimeMillis(), //date d'ajout
-    val isFavorite: Boolean = false
 ) : Parcelable
