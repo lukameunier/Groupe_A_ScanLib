@@ -123,53 +123,62 @@ class HomeFragment : Fragment() {
         })
 
         // Bouton genre
-        binding.authorButton.setOnClickListener {
+        binding.authorButton.setOnClickListener { view ->
             if (genreListCache.isEmpty()) {
                 Toast.makeText(requireContext(), "Aucun genre disponible", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val items = genreListCache.toTypedArray()
-            AlertDialog.Builder(requireContext())
-                .setTitle("Choisir un genre")
-                .setItems(items) { _, index ->
-                    currentFilter = currentFilter.copy(category = items[index])
-                    viewModel.updateFilter(currentFilter)
-                    updateFilterDisplay()
-                }
-                .setNegativeButton("Annuler", null)
-                .show()
+            val popup = PopupMenu(requireContext(), view)
+            genreListCache.forEachIndexed { index, genre ->
+                popup.menu.add(0, index, index, genre)
+            }
+
+            popup.setOnMenuItemClickListener { item ->
+                val selectedGenre = genreListCache[item.itemId]
+                currentFilter = currentFilter.copy(category = selectedGenre)
+                viewModel.updateFilter(currentFilter)
+                updateFilterDisplay()
+                true
+            }
+
+            popup.show()
         }
 
         // Bouton filtre combiné
-        binding.filterButton.setOnClickListener {
-            val options = arrayOf("Filtrer par score", "Filtrer par année", "Réinitialiser les filtres")
+        binding.filterButton.setOnClickListener { anchor ->
+            val popup = PopupMenu(requireContext(), anchor)
+            popup.menuInflater.inflate(R.menu.menu_filter_popup, popup.menu)
 
-            AlertDialog.Builder(requireContext())
-                .setTitle("Choisir un filtre")
-                .setItems(options) { _, index ->
-                    when (index) {
-                        0 -> showScoreFilterDialog()
-                        1 -> showYearFilterDialog()
-                        2 -> viewModel.resetFilters()
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.filter_score -> {
+                        showScorePopup(anchor)
+                        true
                     }
+                    R.id.filter_year -> {
+                        showYearFilterPopup(anchor)
+                        true
+                    }
+                    R.id.filter_recent -> {
+                        currentFilter = currentFilter.copy(sortByDateAjout = true)
+                        viewModel.updateFilter(currentFilter)
+                        updateFilterDisplay()
+                        true
+                    }
+                    else -> false
                 }
-                .setNegativeButton("Annuler", null)
-                .show()
+            }
+
+            popup.show()
         }
+
 
         //reitialiser les filtres en cliquant sur le text
         binding.activeFiltersText.setOnClickListener {
             viewModel.resetFilters()
             Toast.makeText(requireContext(), "Filtres réinitialisés", Toast.LENGTH_SHORT).show()
         }
-
-        // Bouton rénitialiser les filtres
-        binding.resetFiltersButton.setOnClickListener {
-            viewModel.resetFilters()
-            Toast.makeText(requireContext(), "Filtres réinitialisés", Toast.LENGTH_SHORT).show()
-        }
-
 
         // Charger les filtres
         viewModel.loadGenres()
@@ -189,29 +198,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showScoreFilterDialog() {
-        if (scoreListCache.isEmpty()) {
-            Toast.makeText(requireContext(), "Aucun score trouvé", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val scores = scoreListCache.map { it.toString() } + "Score inconnu"
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filtrer par note")
-            .setItems(scores.toTypedArray()) { _, index ->
-                currentFilter = if (index == scores.lastIndex) {
-                    currentFilter.copy(minScore = null, scoreUnknown = true)
-                } else {
-                    currentFilter.copy(minScore = scores[index].toDouble(), scoreUnknown = false)
-                }
-                viewModel.updateFilter(currentFilter)
-                updateFilterDisplay()
-            }
-            .setNegativeButton("Annuler", null)
-            .show()
-    }
-
     private fun updateActionButtons() {
         if (adapter.selectionMode) {
             binding.addBookButton.visibility = View.GONE
@@ -222,23 +208,61 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showYearFilterDialog() {
+    private fun showScorePopup(anchor: View) {
+        if (scoreListCache.isEmpty()) {
+            Toast.makeText(requireContext(), "Aucun score trouvé", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val popup = PopupMenu(requireContext(), anchor)
+
+        // Ajouter tous les scores connus
+        scoreListCache.forEachIndexed { index, score ->
+            popup.menu.add(0, index, index, "≥ %.1f".format(score))
+        }
+
+        // Ajouter l'option "Score inconnu"
+        val unknownId = scoreListCache.size
+        popup.menu.add(0, unknownId, unknownId, "Score inconnu")
+
+        popup.setOnMenuItemClickListener { item ->
+            if (item.itemId == unknownId) {
+                // Appliquer filtre pour les livres sans score
+                currentFilter = currentFilter.copy(minScore = null, scoreUnknown = true)
+            } else {
+                val selectedScore = scoreListCache[item.itemId]
+                currentFilter = currentFilter.copy(minScore = selectedScore, scoreUnknown = false)
+            }
+
+            viewModel.updateFilter(currentFilter)
+            updateFilterDisplay()
+            true
+        }
+
+        popup.show()
+    }
+
+    private fun showYearFilterPopup(anchor: View) {
         if (yearListCache.isEmpty()) {
             Toast.makeText(requireContext(), "Aucune année trouvée", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val years = yearListCache.toTypedArray()
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filtrer par année")
-            .setItems(years) { _, index ->
-//                currentFilter = currentFilter.copy(year = years[index], yearUnknown = false)
-                currentFilter = currentFilter.copy(year = years[index])
-                viewModel.updateFilter(currentFilter)
-                updateFilterDisplay()
-            }
-            .setNegativeButton("Annuler", null)
-            .show()
+        val popup = PopupMenu(requireContext(), anchor)
+
+        yearListCache.forEachIndexed { index, year ->
+            popup.menu.add(0, index, index, year)
+        }
+
+        popup.setOnMenuItemClickListener { item ->
+            val selectedYear = yearListCache[item.itemId]
+            currentFilter = currentFilter.copy(year = selectedYear)
+            viewModel.updateFilter(currentFilter)
+            updateFilterDisplay()
+            true
+        }
+
+        popup.show()
     }
 
     private fun updateFilterDisplay() {
@@ -273,6 +297,7 @@ class HomeFragment : Fragment() {
             binding.resetFiltersButton.visibility = View.VISIBLE
         }
     }
+
     override fun onResume() {
         super.onResume()
         viewModel.loadBooks()

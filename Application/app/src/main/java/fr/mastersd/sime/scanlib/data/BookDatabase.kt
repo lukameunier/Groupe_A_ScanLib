@@ -16,7 +16,7 @@ import androidx.room.TypeConverters
  * @see BookEntity pour le modèle persistant
  * @see BookRepository pour le point d'entrée principal dans les opérations de lecture/écriture
  */
-@Database(entities = [Book::class], version = 2)//changement de version car structure modifée
+@Database(entities = [Book::class], version = 1)//changement de version car structure modifée
 @TypeConverters(BookConverters::class)
 abstract class BookDatabase : RoomDatabase() {
 

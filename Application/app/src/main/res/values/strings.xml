@@ -42,4 +42,9 @@
     <string name="no_filters">Aucun filtre actif</string>
     <string name="reset_filters">Réinitialiser les filtres</string>
     <string name="book_cover">Couverture du livre</string>
+    <string name="filtrer_par_ann_e">Filtrer par année</string>
+    <string name="filtrer_par_score">Filtrer par score</string>
+    <string name="filtrer_par_score_popup">Filtrer par score</string>
+    <string name="filtrer_par_ann_e_popup">Filtrer par année</string>
+    <string name="derniers_abouts_popup">Derniers abouts</string>
 </resources>

@@ -87,6 +87,13 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE title LIKE '%' || :keyword || '%' OR authors LIKE '%' || :keyword || '%'")
     suspend fun getBooksByKeyword(keyword: String): List<Book>
 
+    /**
+     * Filtre par date d'ajout
+     */
+    @Query("SELECT * FROM books ORDER BY dateAjout DESC")
+    suspend fun getBooksSortedByDateAjout(): List<Book>
+
+
     //==================================================================================================================//
     /* Mise à Jour ciblée */
     /**
