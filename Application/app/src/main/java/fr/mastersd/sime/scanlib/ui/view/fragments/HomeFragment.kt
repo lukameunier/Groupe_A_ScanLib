@@ -21,7 +21,6 @@ import fr.mastersd.sime.scanlib.data.FilterState
 import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.HomeViewModel
-import fr.mastersd.sime.scanlib.R
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
