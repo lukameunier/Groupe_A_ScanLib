@@ -159,4 +159,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun createFavoriteGroup(name: String) {
+        viewModelScope.launch {
+            bookRepository.insertFavoriteGroup(FavoriteGroup(name = name))
+            loadGroups() // Recharge la liste des groupes
+        }
+    }
+
+
 }

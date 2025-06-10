@@ -43,7 +43,9 @@ class BookViewModel @Inject constructor() : ViewModel() {
         appContext = context.applicationContext
         val db = BookDatabase.getDatabase(appContext!!)
         val bookDao = db.bookDao()
-        bookRepository = BookRepository(bookDao = bookDao)
+        val favoriteGroupDao = db.favoriteGroupDao()
+
+        bookRepository = BookRepository(bookDao, favoriteGroupDao)
     }
 
     /**

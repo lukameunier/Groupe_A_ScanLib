@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -184,25 +185,42 @@ class HomeFragment : Fragment() {
         viewModel.loadGroups()
 
         binding.groupButton.setOnClickListener { anchor ->
-            val groups = viewModel.groups.value
-            if (groups.isNullOrEmpty()) {
-                Toast.makeText(requireContext(), "Aucun groupe de favoris", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            val groups = viewModel.groups.value.orEmpty()
+            val popup = PopupMenu(requireContext(), anchor)
+
+            // Option "Tous" en haut
+            popup.menu.add(0, -1, 0, "Tous")
+
+            // Groupes existants (conversion explicite du type)
+            groups.forEachIndexed { index, group ->
+                popup.menu.add(0, group.id.toInt(), index + 1, group.name)
             }
 
-            val popup = PopupMenu(requireContext(), anchor)
-            groups.forEachIndexed { index, group ->
-                popup.menu.add(0, index, index, group.name)
-            }
+            // Option "Créer un groupe" tout en bas
+            val createGroupMenuId = Int.MAX_VALUE
+            popup.menu.add(0, createGroupMenuId, groups.size + 1, "Créer un groupe")
 
             popup.setOnMenuItemClickListener { item ->
-                val groupId = groups[item.itemId].id
-                viewModel.filterByGroup(groupId)
-                true
+                when (item.itemId) {
+                    -1 -> {
+                        viewModel.loadBooks()
+                        true
+                    }
+                    createGroupMenuId -> {
+                        showCreateGroupDialog()
+                        true
+                    }
+                    else -> {
+                        viewModel.filterByGroup(item.itemId.toLong())
+                        true
+                    }
+                }
             }
 
             popup.show()
         }
+
+
 
 //============================================
         // Charger les filtres
@@ -327,4 +345,27 @@ class HomeFragment : Fragment() {
         super.onResume()
         viewModel.loadBooks()
     }
+
+    //=======================================
+    private fun showCreateGroupDialog() {
+        val editText = EditText(requireContext()).apply {
+            hint = "Nom du groupe"
+            setPadding(16, 16, 16, 16)
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Créer un nouveau groupe")
+            .setView(editText)
+            .setPositiveButton("Créer") { _, _ ->
+                val groupName = editText.text.toString().trim()
+                if (groupName.isNotEmpty()) {
+                    viewModel.createFavoriteGroup(groupName)
+                } else {
+                    Toast.makeText(requireContext(), "Le nom du groupe ne peut pas être vide", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
 }

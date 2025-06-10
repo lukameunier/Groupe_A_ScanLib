@@ -141,7 +141,41 @@ class DetailsFragment : Fragment() {
 
         // Masque le bouton au départ, il n'apparaît que si modification
         binding.saveButton.visibility = View.GONE
+
+//================================================================================
+        // Charger les groupes
+        detailsViewModel.loadGroups()
+
+        // Configurer le bouton "Ajouter aux groupes"
+        binding.addToGroupsButton.setOnClickListener {
+            val groups = detailsViewModel.groups.value.orEmpty()
+
+            if (groups.isEmpty()) {
+                Toast.makeText(requireContext(), "Aucun groupe disponible", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val groupNames = groups.map { it.name }.toTypedArray()
+            val checkedItems = BooleanArray(groups.size) { false }
+
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Ajouter à un ou plusieurs groupes")
+                .setMultiChoiceItems(groupNames, checkedItems) { _, which, isChecked ->
+                    checkedItems[which] = isChecked
+                }
+                .setPositiveButton("Ajouter") { _, _ ->
+                    groups.forEachIndexed { index, group ->
+                        if (checkedItems[index]) {
+                            detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                        }
+                    }
+                    Toast.makeText(requireContext(), "Livre ajouté aux groupes sélectionnés", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Annuler", null)
+                .show()
+        }
     }
+//=======================================================================
 
     private fun setEditMode(enabled: Boolean) {
         if (isEditMode == enabled) return
@@ -183,4 +217,7 @@ class DetailsFragment : Fragment() {
         binding.saveButton.visibility =
             if (currentBook != originalBook) View.VISIBLE else View.GONE
     }
+
+
+
 }

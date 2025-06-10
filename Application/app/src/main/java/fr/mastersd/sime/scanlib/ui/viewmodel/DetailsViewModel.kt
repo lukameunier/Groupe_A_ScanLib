@@ -1,10 +1,12 @@
 package fr.mastersd.sime.scanlib.ui.viewmodel
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
+import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,4 +19,20 @@ class DetailsViewModel @Inject constructor(
             repository.updateBook(book)
         }
     }
+
+    val groups = MutableLiveData<List<FavoriteGroup>>()
+
+    fun loadGroups() {
+        viewModelScope.launch {
+            val loadedGroups = repository.getAllFavoriteGroups()
+            groups.postValue(loadedGroups)
+        }
+    }
+
+    fun addBookToGroup(bookId: String, groupId: Long) {
+        viewModelScope.launch {
+            repository.addBookToGroup(bookId, groupId)
+        }
+    }
+
 }

@@ -8,10 +8,9 @@ import javax.inject.Inject
 
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
-    val googleBooksService: GoogleBooksService = GoogleBooksService(),
-    private val favoriteGroupDao: FavoriteGroupDao
+    private val favoriteGroupDao: FavoriteGroupDao,
+    val googleBooksService: GoogleBooksService = GoogleBooksService()
 ) {
-
     suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
         val scanResults = valTexts.map { ScanResult(it) }
         return@withContext fetchBooksAndLog(scanResults)
@@ -111,6 +110,10 @@ class BookRepository @Inject constructor(
 
     suspend fun insertFavoriteGroup(group: FavoriteGroup): Long {
         return favoriteGroupDao.insertGroup(group)
+    }
+
+    suspend fun addBookToGroup(bookId: String, groupId: Long) {
+        favoriteGroupDao.insertCrossRef(BookGroupCrossRef(bookId, groupId))
     }
 
 }
