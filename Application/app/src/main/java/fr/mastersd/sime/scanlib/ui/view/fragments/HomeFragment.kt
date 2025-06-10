@@ -159,6 +159,12 @@ class HomeFragment : Fragment() {
                         showYearFilterPopup(anchor)
                         true
                     }
+                    R.id.filter_recent -> {
+                        currentFilter = currentFilter.copy(sortByDateAjout = true)
+                        viewModel.updateFilter(currentFilter)
+                        updateFilterDisplay()
+                        true
+                    }
                     else -> false
                 }
             }

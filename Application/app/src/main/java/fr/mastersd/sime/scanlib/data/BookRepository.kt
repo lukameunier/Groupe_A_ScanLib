@@ -17,7 +17,8 @@ class BookRepository @Inject constructor(
     }
 
     suspend fun insertBook(book: Book) {
-        bookDao.insertBooks(listOf(book))
+        val bookWithDate = book.copy(dateAjout = System.currentTimeMillis())
+        bookDao.insertBooks(listOf(bookWithDate))
     }
 
     private suspend fun fetchBooksAndLog(scanResults: List<ScanResult>): BookSyncResult {
@@ -52,6 +53,10 @@ class BookRepository @Inject constructor(
 
     suspend fun getBooksByKeyword(keyword: String): List<Book> {
         return bookDao.getBooksByKeyword(keyword)
+    }
+
+    suspend fun getBooksSortedByDateAjout(): List<Book> {
+        return bookDao.getBooksSortedByDateAjout()
     }
 
     suspend fun getAllYears(): List<String> {

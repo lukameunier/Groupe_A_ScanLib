@@ -115,23 +115,28 @@ class HomeViewModel @Inject constructor(
             val filtered = books.filter { book ->
                 val categoryMatch = filters.category?.let { cat ->
                     book.categories?.any { it.contains(cat, ignoreCase = true) } ?: false
-                } ?: true
+                } != false
 
                 val scoreMatch = when {
                     filters.scoreUnknown -> book.averageRating == null
-                    filters.minScore != null -> book.averageRating?.let { it >= filters.minScore } ?: false
+                    filters.minScore != null -> book.averageRating?.let { it >= filters.minScore } == true
                     else -> true
                 }
 
                 val yearMatch = when {
-                    filters.year != null -> book.publishedDate?.startsWith(filters.year) ?: false
+                    filters.year != null -> book.publishedDate?.startsWith(filters.year) == true
                     else -> true
                 }
 
                 categoryMatch && scoreMatch && yearMatch
             }
 
-            _books.postValue(filtered)
+            val finalResult = if (filters.sortByDateAjout)
+                filtered.sortedByDescending { it.dateAjout }
+            else
+                filtered
+
+            _books.postValue(finalResult)
         }
     }
 }

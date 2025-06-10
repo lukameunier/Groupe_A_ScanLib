@@ -33,4 +33,5 @@ data class Book(
     val infoLink: String?, //lien fiche d'info
     /*?*/ val country: String?, //pays origine ou publication
     /*?*/ val textSnippet: String?, //extrait de recherche: mots-clés
+    val dateAjout: Long = System.currentTimeMillis() //date d'ajout
 ) : Parcelable
