@@ -90,16 +90,6 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Observer automatiquement les changements de filtre et relancer le filtrage combiné
-     */
-//    private fun observeFilterChanges() {
-//        filters.observeForever { filterState ->
-//            applyCombinedFilters(filterState)
-//
-//        }
-//    }
-
-    /**
      * Mise à jour des filtres à partir du fragment
      */
     fun updateFilter(newFilter: FilterState) {
@@ -134,7 +124,6 @@ class HomeViewModel @Inject constructor(
                 }
 
                 val yearMatch = when {
-//                    filters.yearUnknown -> book.publishedDate.isNullOrBlank()
                     filters.year != null -> book.publishedDate?.startsWith(filters.year) ?: false
                     else -> true
                 }

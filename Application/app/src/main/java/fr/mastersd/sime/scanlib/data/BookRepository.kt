@@ -50,20 +50,8 @@ class BookRepository @Inject constructor(
         bookDao.getAllBooks()
     }
 
-    suspend fun getBooksByCategory(category: String): List<Book> {
-        return bookDao.getBooksByCategory(category)
-    }
-
-    suspend fun getBooksByMinimumScore(minScore: Double): List<Book> {
-        return bookDao.getBooksByMinimumScore(minScore)
-    }
-
     suspend fun getBooksByKeyword(keyword: String): List<Book> {
         return bookDao.getBooksByKeyword(keyword)
-    }
-
-    suspend fun getBooksByYear(year: String): List<Book> {
-        return bookDao.getBooksByYear(year)
     }
 
     suspend fun getAllYears(): List<String> {
@@ -97,11 +85,6 @@ class BookRepository @Inject constructor(
             .distinct()
             .sortedDescending()
     }
-
-    suspend fun getBooksWithoutScore(): List<Book> {
-        return bookDao.getBooksByNoScore()
-    }
-
 
     suspend fun updateBook(book: Book) {
         bookDao.updateBook(book)
