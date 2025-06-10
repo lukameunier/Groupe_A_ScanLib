@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
+import fr.mastersd.sime.scanlib.data.FilterState
 import kotlinx.coroutines.launch
-import org.tensorflow.lite.support.label.Category
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +22,19 @@ class HomeViewModel @Inject constructor(
     // Donnée publique observable (pour le Fragment)
     val books: LiveData<List<Book>> get() = _books
 
+    private val _genres = MutableLiveData<List<String>>()
+    val genres: LiveData<List<String>> get() = _genres
+
+    private val _years = MutableLiveData<List<String>>()
+    val years: LiveData<List<String>> get() = _years
+
+    private val _scores = MutableLiveData<List<Double>>()
+    val scores: LiveData<List<Double>> get() = _scores
+
+    // État actuel des filtres (observable)
+    private val _filters = MutableLiveData(FilterState())
+    val filters: LiveData<FilterState> get() = _filters
+
     // Chargement des livres au lancement du ViewModel
     init {
         loadBooks()
@@ -31,52 +44,19 @@ class HomeViewModel @Inject constructor(
     fun loadBooks() {
         viewModelScope.launch {
             val list = bookRepository.getAllBooks()
-            _books.postValue(list) // postValue pour éviter les bugs si appelé hors du thread UI
+            _books.postValue(list)
         }
     }
 
     /**
-     * Filtre par catégorie
+     * Chargement des genres disponibles (à afficher dans les filtres)
      */
-    private val _genres = MutableLiveData<List<String>>()
-    val genres: LiveData<List<String>> get() = _genres
-
     fun loadGenres() {
         viewModelScope.launch {
             val list = bookRepository.getAllGenres()
             _genres.postValue(list)
         }
     }
-
-    fun filterByCategory(category: String) {
-        viewModelScope.launch {
-            val result = bookRepository.getBooksByCategory(category)
-            _books.postValue(result)
-        }
-    }
-
-    /**
-     * Filtre par score de livre
-     */
-    fun filterByScore(minScore: Double) {
-        viewModelScope.launch {
-            val result = bookRepository.getBooksByMinimumScore(minScore)
-            _books.postValue(result)
-        }
-    }
-
-    /**
-     * Recherche par mot-clé
-     */
-    fun searchByKeyword(keyword: String ){
-        viewModelScope.launch {
-            val result = bookRepository.getBooksByKeyword(keyword)
-            _books.postValue(result)
-        }
-    }
-
-    private val _years = MutableLiveData<List<String>>()
-    val years: LiveData<List<String>> get() = _years
 
     fun loadYears() {
         viewModelScope.launch {
@@ -85,16 +65,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun filterByYear(year: String) {
-        viewModelScope.launch {
-            val result = bookRepository.getBooksByYear(year)
-            _books.postValue(result)
-        }
-    }
-
-    private val _scores = MutableLiveData<List<Double>>()
-    val scores: LiveData<List<Double>> get() = _scores
-
     fun loadScores() {
         viewModelScope.launch {
             val list = bookRepository.getAllScores()
@@ -102,9 +72,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun filterByNoScore() {
+    /**
+     * Recherche par mot-clé (titre ou auteur)
+     */
+    fun searchByKeyword(keyword: String) {
         viewModelScope.launch {
-            val result = bookRepository.getBooksWithoutScore()
+            val result = bookRepository.getBooksByKeyword(keyword)
             _books.postValue(result)
         }
     }
@@ -113,6 +86,63 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             bookRepository.deleteBooks(books)
             loadBooks()
+        }
+    }
+
+    /**
+     * Observer automatiquement les changements de filtre et relancer le filtrage combiné
+     */
+//    private fun observeFilterChanges() {
+//        filters.observeForever { filterState ->
+//            applyCombinedFilters(filterState)
+//
+//        }
+//    }
+
+    /**
+     * Mise à jour des filtres à partir du fragment
+     */
+    fun updateFilter(newFilter: FilterState) {
+        _filters.value = newFilter
+    }
+
+    /**
+     * Réinitialisation de tous les filtres
+     */
+    fun resetFilters() {
+        _filters.value = FilterState()
+    }
+
+    /**
+     * Filtrage combiné par genre + score + année
+     *
+     * Appliquer les filtres combinés à partir du FilterState
+     */
+     fun applyCombinedFilters(filters: FilterState) {
+        viewModelScope.launch {
+            val books = bookRepository.getAllBooks()
+
+            val filtered = books.filter { book ->
+                val categoryMatch = filters.category?.let { cat ->
+                    book.categories?.any { it.contains(cat, ignoreCase = true) } ?: false
+                } ?: true
+
+                val scoreMatch = when {
+                    filters.scoreUnknown -> book.averageRating == null
+                    filters.minScore != null -> book.averageRating?.let { it >= filters.minScore } ?: false
+                    else -> true
+                }
+
+                val yearMatch = when {
+//                    filters.yearUnknown -> book.publishedDate.isNullOrBlank()
+                    filters.year != null -> book.publishedDate?.startsWith(filters.year) ?: false
+                    else -> true
+                }
+
+                categoryMatch && scoreMatch && yearMatch
+            }
+
+            _books.postValue(filtered)
         }
     }
 }
