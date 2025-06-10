@@ -9,7 +9,7 @@ import org.tensorflow.lite.support.label.Category
  * Définit les opérations de base pour accéder à [BookEntity] dans la bd locale
  *
  * @see BookDatabase pour l’accès à la base
- * @see BookEntity pour le modèle stocké
+ * @see Book pour le modèle stocké
  * @see BookRepository pour l’usage métier des méthodes DAO
  */
 @Dao
@@ -127,10 +127,4 @@ interface BookDao {
 
     @Delete
     suspend fun deleteBooks(books: List<Book>)
-
-    //==================================================================================
-    //==================================================================================
-    // //?//: méthode de mise à jour partielle d'un champ
-    //==================================================================================
-    //==================================================================================
 }
