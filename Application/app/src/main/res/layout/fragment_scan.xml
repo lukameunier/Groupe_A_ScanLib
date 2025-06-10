@@ -50,32 +50,6 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Vignette de l'image capturée -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardThumbnailContainer"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="32dp"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp"
-        app:layout_constraintStart_toStartOf="@id/cardCameraXContainer"
-        app:layout_constraintBottom_toBottomOf="@id/cardCameraXContainer">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:id="@+id/previewThumbnail"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:contentDescription="@string/thumbnail_text_desc" />
-
-        </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
-
     <!-- Bouton de capture -->
     <ImageButton
         android:id="@+id/captureButton"

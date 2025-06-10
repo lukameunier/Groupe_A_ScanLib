@@ -33,27 +33,25 @@ class ScanViewModel @Inject constructor(
     fun processImage(path: String) {
         viewModelScope.launch {
             val bitmap = getRotatedBitmap(path)
-
-            // Étape 1 : Détection des tranches
             val (boxes, modelSize) = detector.detect(bitmap)
-
-            // Étape 2 : Dessin des boîtes détectées
             val annotated = drawBoxesOnBitmap(bitmap, boxes, modelSize)
 
-            // (optionnel) Remplace le fichier d’origine par l’image annotée
             FileOutputStream(path).use {
                 annotated.compress(Bitmap.CompressFormat.JPEG, 90, it)
             }
 
-            // Met à jour l’image à afficher dans l’UI
             _processedImage.postValue(annotated)
 
-            // Étape 3 : OCR pour chaque zone détectée
             val texts = ocr.extractTextsFromBoxes(bitmap, boxes)
                 .filter { it.isNotBlank() }
-
-            // Met à jour les textes OCR dans l’UI
             _ocrTexts.postValue(texts)
+
+            try {
+                val file = java.io.File(path)
+                if (file.exists()) file.delete()
+            } catch (e: Exception) {
+                android.util.Log.e("ScanViewModel", "Erreur suppression image $path", e)
+            }
         }
     }
 

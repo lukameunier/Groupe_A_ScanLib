@@ -97,7 +97,8 @@ class HomeFragment : Fragment() {
                 dialog.dismiss()
             }
             sheetView.findViewById<MaterialButton>(R.id.option_manual).setOnClickListener {
-                Toast.makeText(requireContext(), "Ajout manuel à implémenter", Toast.LENGTH_SHORT).show()
+                val action = HomeFragmentDirections.actionHomeFragmentToManualSearchFragment()
+                findNavController().navigate(action)
                 dialog.dismiss()
             }
             sheetView.findViewById<MaterialButton>(R.id.option_import).setOnClickListener {

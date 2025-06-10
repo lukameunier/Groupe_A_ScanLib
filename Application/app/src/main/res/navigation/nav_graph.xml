@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_homeFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_manualSearchFragment"
+            app:destination="@id/manualSearchFragment" />
     </fragment>
 
     <fragment
@@ -58,6 +61,15 @@
         <action
             android:id="@+id/action_scanResultFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/manualSearchFragment"
+        android:name="fr.mastersd.sime.scanlib.ui.view.fragments.ManualSearchFragment"
+        android:label="ManualSearchFragment"
+        tools:layout="@layout/fragment_manual_search">
+        <action
+            android:id="@+id/action_manualSearchFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
     </fragment>
 
 

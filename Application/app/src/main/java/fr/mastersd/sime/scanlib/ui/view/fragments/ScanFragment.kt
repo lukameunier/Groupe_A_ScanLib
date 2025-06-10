@@ -26,11 +26,9 @@ import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
 
-    // Liaison avec le layout XML
     private var _binding: FragmentScanBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModels pour la capture et le traitement
     private val viewModel: BookViewModel by viewModels()
     private val scanViewModel: ScanViewModel by viewModels()
 
@@ -41,7 +39,6 @@ class ScanFragment : Fragment() {
     private var camera: Camera? = null
     private var syncStartTime: Long = 0L
 
-    // Gère la demande de permission caméra
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else handleCameraDenied()
     }
@@ -54,7 +51,8 @@ class ScanFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialisation obligatoire de Room (BookRepository)
+        cleanCaptureCache()
+
         viewModel.setContext(requireContext())
 
         // Observe les résultats du traitement OCR + appel API
@@ -68,7 +66,7 @@ class ScanFragment : Fragment() {
 
                 val navOptions = androidx.navigation.navOptions {
                     popUpTo(R.id.scanFragment) {
-                        inclusive = true // supprime ScanFragment de la pile
+                        inclusive = true
                     }
                 }
 
@@ -90,6 +88,20 @@ class ScanFragment : Fragment() {
     }
 
     /**
+     * Nettoie le dossier cache/captures au démarrage du fragment
+     */
+    private fun cleanCaptureCache() {
+        val context = requireContext()
+        val captureDir = java.io.File(context.cacheDir, "captures")
+        if (captureDir.exists()) {
+            captureDir.listFiles()?.forEach { file ->
+                // Supprime seulement les fichiers, pas les dossiers
+                if (file.isFile) file.delete()
+            }
+        }
+    }
+
+    /**
      * Observe les données des ViewModels :
      * - image capturée
      * - image traitée (bitmap)
@@ -100,10 +112,6 @@ class ScanFragment : Fragment() {
             scanViewModel.processImage(path)
         }
 
-        scanViewModel.processedImage.observe(viewLifecycleOwner) { bitmap ->
-            binding.previewThumbnail.setImageBitmap(bitmap)
-        }
-
         scanViewModel.ocrTexts.observe(viewLifecycleOwner) { texts ->
             val nonEmptyTexts = texts.filter { it.isNotBlank() }
             if (nonEmptyTexts.isNotEmpty()) {
@@ -112,32 +120,24 @@ class ScanFragment : Fragment() {
             } else {
                 Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
             }
+            // Suppression de l'image après traitement OCR
+            viewModel.lastImagePath.value?.let { path ->
+                try {
+                    val file = java.io.File(path)
+                    if (file.exists()) file.delete()
+                } catch (e: Exception) {
+                    Log.e("ScanFragment", "Erreur suppression image $path", e)
+                }
+            }
         }
     }
 
     /**
      * Configure les interactions utilisateur :
      * - capture avec le bouton central
-     * - aperçu des images précédentes
      */
     private fun setupListeners() = with(binding) {
         captureButton.setOnClickListener { viewModel.captureImage() }
-
-        previewThumbnail.setOnClickListener {
-            val images = viewModel.getAllCapturedImages()
-            if (images.isEmpty()) {
-                Toast.makeText(requireContext(), "Aucune image capturée", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            AlertDialog.Builder(requireContext())
-                .setTitle("Images capturées")
-                .setItems(images.map { it.name }.toTypedArray()) { _, index ->
-                    scanViewModel.processImage(images[index].absolutePath)
-                }
-                .setNegativeButton("Fermer", null)
-                .show()
-        }
     }
 
     /**
