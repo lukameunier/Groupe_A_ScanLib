@@ -8,7 +8,8 @@ import javax.inject.Inject
 
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
-    val googleBooksService: GoogleBooksService = GoogleBooksService()
+    val googleBooksService: GoogleBooksService = GoogleBooksService(),
+    private val favoriteDao: FavoriteGroupDao
 ) {
 
     suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
@@ -98,4 +99,12 @@ class BookRepository @Inject constructor(
     suspend fun deleteBooks(books: List<Book>) {
         bookDao.deleteBooks(books)
     }
+
+    suspend fun getAllFavoriteGroups() {
+        return favoriteDao.getAllGroupsWithBooks()
+            .mapNotNull { it }
+    }
+
+    suspend fun getBooksByGroup(groupId: Long): List<Book>
+
 }
