@@ -33,12 +33,24 @@ class BookSpineOCR {
     suspend fun extractTextsFromBoxes(image: Bitmap, boxes: List<RectF>): List<String> = withContext(Dispatchers.Default) {
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val results = mutableListOf<String>()
-        val resizedImage = image.scale(640, 640)
+
+        // Calcul des facteurs d'échelle entre l'image redimensionnée (utilisée pour la détection)
+        // et l'image d'origine (utilisée pour le crop OCR)
+        val scaleX = image.width / 640f
+        val scaleY = image.height / 640f
 
         for (box in boxes) {
             try {
-                val cropped = cropBitmap(resizedImage, box)
-                val zoomedImage = cropped.scale(cropped.width * 3, cropped.height * 3)
+                // Mise à l'échelle des coordonnées vers l'image d'origine
+                val originalBox = RectF(
+                    box.left * scaleX,
+                    box.top * scaleY,
+                    box.right * scaleX,
+                    box.bottom * scaleY
+                )
+
+                val cropped = cropBitmap(image, originalBox)
+                val zoomedImage = cropped.scale(cropped.width * 6, cropped.height * 6)
                 val inputImage = InputImage.fromBitmap(zoomedImage, 0)
                 val resultText = recognizer.process(inputImage).await().text
                 val line = cleanTextSingleLine(resultText)
@@ -84,9 +96,11 @@ class BookSpineOCR {
         return rawText
             .lines()
             .map { it.trim() }
-            .filter { it.isNotEmpty() && !it.matches(Regex("^\\d+$")) }
+            .filter { it.isNotEmpty() && !it.matches(Regex("^\\d+$")) } // ignore lignes uniquement numériques
+            .map { it.replace(Regex("[^\\p{L}\\p{N}\\s.,:;!?'-]"), "") } // supprime caractères non textuels
             .joinToString(" ")
-            .replace(Regex("\\s+"), " ")
+            .replace(Regex("\\s+"), " ") // espace unique
             .trim()
     }
+
 }
