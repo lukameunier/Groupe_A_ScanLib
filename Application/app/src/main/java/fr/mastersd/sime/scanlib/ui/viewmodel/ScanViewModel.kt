@@ -42,7 +42,9 @@ class ScanViewModel @Inject constructor(
             val (boxes, modelSize) = detector.detect(bitmap)
             val annotated = drawBoxesOnBitmap(bitmap, boxes, modelSize)
 
-            FileOutputStream(path).use {
+            val annotatedPath = path.replace(".jpg", "_boxes.jpg")
+
+            FileOutputStream(annotatedPath).use {
                 annotated.compress(Bitmap.CompressFormat.JPEG, 90, it)
             }
 
@@ -51,13 +53,6 @@ class ScanViewModel @Inject constructor(
             val texts = ocr.extractTextsFromBoxes(bitmap, boxes)
                 .filter { it.isNotBlank() }
             _ocrTexts.postValue(texts)
-
-            try {
-                val file = java.io.File(path)
-                if (file.exists()) file.delete()
-            } catch (e: Exception) {
-                android.util.Log.e("ScanViewModel", "Erreur suppression image $path", e)
-            }
         }
     }
 
@@ -65,6 +60,10 @@ class ScanViewModel @Inject constructor(
      * Lit une image à partir du disque, applique une rotation correcte selon les métadonnées EXIF.
      */
     private fun getRotatedBitmap(path: String): Bitmap {
+        val file = java.io.File(path)
+        if (!file.exists()) {
+            throw java.io.FileNotFoundException("Le fichier image $path n'existe pas !")
+        }
         val bmp = BitmapFactory.decodeFile(path)
         val exif = ExifInterface(path)
         val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -74,10 +73,8 @@ class ScanViewModel @Inject constructor(
                 ExifInterface.ORIENTATION_ROTATE_90   -> postRotate(90f)
                 ExifInterface.ORIENTATION_ROTATE_180  -> postRotate(180f)
                 ExifInterface.ORIENTATION_ROTATE_270  -> postRotate(270f)
-                // Aucun cas pour NORMAL → pas de rotation
             }
         }
-
         return Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
     }
 

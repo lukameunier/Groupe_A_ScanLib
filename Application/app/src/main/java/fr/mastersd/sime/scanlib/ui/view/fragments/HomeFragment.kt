@@ -5,6 +5,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
+import java.io.File
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
@@ -277,9 +278,19 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         homeViewModel.loadBooks()
+        cleanCaptureCache()
     }
 
-    // Petite extension locale pour afficher rapidement un toast
+    private fun cleanCaptureCache() {
+        val context = requireContext()
+        val captureDir = File(context.cacheDir, "captures")
+        if (captureDir.exists()) {
+            captureDir.listFiles()?.forEach { file ->
+                if (file.isFile) file.delete()
+            }
+        }
+    }
+
     private fun toast(msg: String) =
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
 }

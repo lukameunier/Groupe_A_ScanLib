@@ -13,15 +13,15 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class BookViewModel @Inject constructor() : ViewModel() {
+class BookViewModel @Inject constructor(
+    private val bookRepository: BookRepository
+) : ViewModel() {
 
-    private lateinit var bookRepository: BookRepository
     private var imageCapture: ImageCapture? = null
-    private var appContext: Context? = null
 
     // Contient le chemin de la dernière image capturée
-    private val _lastImagePath = MutableLiveData<String>()
-    val lastImagePath: LiveData<String> get() = _lastImagePath
+    private val _lastImagePath = MutableLiveData<String?>()
+    val lastImagePath: LiveData<String?> get() = _lastImagePath
 
     // Résultat du processus de synchronisation avec Google Books API
     private val _syncResult = MutableLiveData<BookSyncResult>()
@@ -35,16 +35,10 @@ class BookViewModel @Inject constructor() : ViewModel() {
     private val _allBooks = MutableLiveData<List<Book>>()
     val allBooks: LiveData<List<Book>> get() = _allBooks
 
-    /**
-     * Initialise la base de données locale Room et le repository.
-     * À appeler avant toute interaction avec le repository.
-     */
-    fun setContext(context: Context) {
-        appContext = context.applicationContext
-        val db = BookDatabase.getDatabase(appContext!!)
-        val bookDao = db.bookDao()
-        bookRepository = BookRepository(bookDao = bookDao)
+    fun clearLastImagePath() {
+        _lastImagePath.value = null
     }
+
 
     /**
      * Enregistre une instance d'ImageCapture (CameraX) pour effectuer les captures plus tard.
@@ -57,8 +51,7 @@ class BookViewModel @Inject constructor() : ViewModel() {
      * Capture une image à l’aide de CameraX et sauvegarde le fichier dans un répertoire temporaire.
      * Si la capture réussit, le chemin est publié dans le LiveData lastImagePath.
      */
-    fun captureImage() {
-        val context = appContext ?: return
+    fun captureImage(context: Context) {
         val captureDir = File(context.cacheDir, "captures").apply { mkdirs() }
         val photoFile = File(captureDir, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -105,7 +98,6 @@ class BookViewModel @Inject constructor() : ViewModel() {
      * Les livres sont publiés dans allBooks.
      */
     fun loadBooksFromDb() {
-        if (!::bookRepository.isInitialized) return
         viewModelScope.launch {
             val books = bookRepository.getAllBooks()
             _allBooks.postValue(books)
@@ -117,7 +109,6 @@ class BookViewModel @Inject constructor() : ViewModel() {
      * À utiliser uniquement après sélection manuelle par l'utilisateur.
      */
     fun insertBook(book: Book) {
-        if (!::bookRepository.isInitialized) return
         viewModelScope.launch {
             bookRepository.insertBook(book)
         }
