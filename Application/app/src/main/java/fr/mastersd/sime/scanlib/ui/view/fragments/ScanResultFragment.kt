@@ -3,8 +3,10 @@ package fr.mastersd.sime.scanlib.ui.view.fragments
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import fr.mastersd.sime.scanlib.R
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -35,8 +37,14 @@ class ScanResultFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        bookViewModel.setContext(requireContext()) //  OBLIGATOIRE pour initialiser Room
-        // Initialiser l’adapter avec le clic vers les détails
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    findNavController().popBackStack(R.id.homeFragment, false)
+                }
+            }
+        )
+
         adapter = ScanResultAdapter { selectedBook ->
             val action = ScanResultFragmentDirections
                 .actionScanResultFragmentToDetailsFragment(selectedBook)
@@ -50,6 +58,8 @@ class ScanResultFragment : Fragment() {
 
         // Bouton enregistrer uniquement les livres cochés
         binding.saveButton.setOnClickListener {
+            val action = ScanResultFragmentDirections
+                .actionScanResultFragmentToHomeFragment()
             val selectedBooks = adapter.getSelectedBooks()
             if (selectedBooks.isEmpty()) {
                 Toast.makeText(requireContext(), "Aucun livre sélectionné", Toast.LENGTH_SHORT).show()
@@ -58,7 +68,7 @@ class ScanResultFragment : Fragment() {
                     bookViewModel.insertBook(book)
                 }
                 Toast.makeText(requireContext(), "${selectedBooks.size} livre(s) enregistré(s)", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp() // retour à HomeFragment
+                findNavController().navigate(action)
             }
         }
     }

@@ -47,4 +47,13 @@
     <string name="filtrer_par_score_popup">Filtrer par score</string>
     <string name="filtrer_par_ann_e_popup">Filtrer par année</string>
     <string name="derniers_abouts_popup">Derniers ajouts</string>
+    <string name="derniers_abouts_popup">Derniers abouts</string>
+    <string name="image_arrow_desc">Flèche de l\'image originale vers l\'image avec boîtes</string>
+    <string name="treatments_title">Traitements</string>
+    <string name="image_original_text">Image Originale</string>
+    <string name="image_original_desc">Texte qui spécifie l\'image originale</string>
+    <string name="image_with_boxes_text">Image Avec Boîtes</string>
+    <string name="images_with_boxes_desc">Texte qui spécifie l\'image avec boîtes</string>
+    <string name="imageview_original">Image originale</string>
+    <string name="imageview_with_boxes">Image annotée</string>
 </resources>

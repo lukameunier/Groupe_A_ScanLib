@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary_background">
+
+    <!-- Bandeau en haut -->
+    <TextView
+        android:id="@+id/headerTitle"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:background="@color/secondary_background"
+        android:gravity="center"
+        android:text="@string/treatments_title"
+        android:textColor="@color/secondary_text"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ProgressBar -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/headerTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"/>
+
+    <!-- Image originale description -->
+    <TextView
+        android:id="@+id/imageOriginalDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/image_original_text"
+        android:contentDescription="@string/image_original_desc"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintStart_toStartOf="@id/imageOriginal"
+        app:layout_constraintEnd_toEndOf="@id/imageOriginal"/>
+
+    <!-- Image avec boîtes description -->
+    <TextView
+        android:id="@+id/imageWithBoxesDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/image_with_boxes_text"
+        android:contentDescription="@string/images_with_boxes_desc"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintStart_toStartOf="@id/imageWithBoxes"
+        app:layout_constraintEnd_toEndOf="@id/imageWithBoxes"/>
+
+    <!-- Image Originale -->
+    <ImageView
+        android:id="@+id/imageOriginal"
+        android:layout_width="100dp"
+        android:layout_height="150dp"
+        android:contentDescription="@string/imageview_original"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintTop_toBottomOf="@id/imageOriginalDesc"
+        app:layout_constraintStart_toStartOf="@id/headerTitle"
+        app:layout_constraintEnd_toStartOf="@id/imageWithBoxes"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintHeight_percent="0.25" />
+
+    <ImageView
+        android:id="@+id/imagesArrow"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/baseline_compare_arrows_24"
+        android:contentDescription="@string/image_arrow_desc"
+        app:layout_constraintStart_toEndOf="@id/imageOriginal"
+        app:layout_constraintEnd_toStartOf="@id/imageWithBoxes"
+        app:layout_constraintTop_toTopOf="@id/imageOriginal"
+        app:layout_constraintBottom_toBottomOf="@id/imageOriginal"
+        app:tint="@color/secondary_background" />
+
+    <!-- Image avec Boîtes -->
+    <ImageView
+        android:id="@+id/imageWithBoxes"
+        android:layout_width="100dp"
+        android:layout_height="150dp"
+        android:contentDescription="@string/imageview_with_boxes"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintTop_toBottomOf="@id/imageOriginalDesc"
+        app:layout_constraintStart_toEndOf="@id/imageOriginal"
+        app:layout_constraintEnd_toEndOf="@id/headerTitle"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintHeight_percent="0.25"/>
+
+    <!-- Texte Nombre de livres -->
+    <TextView
+        android:id="@+id/textBookCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nombres de livres détéctés :"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/secondary_background"
+        app:layout_constraintTop_toBottomOf="@id/imageOriginal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Résultats OCR -->
+    <TextView
+        android:id="@+id/textOcrResults"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Résultats OCR..."
+        android:textColor="@color/secondary_background"
+        app:layout_constraintStart_toStartOf="@id/imageOriginal"
+        app:layout_constraintEnd_toEndOf="@id/imageWithBoxes"
+        app:layout_constraintTop_toBottomOf="@id/textBookCount" />
+
+    <!-- Bouton Continuer -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnContinue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Voir les livres"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/textOcrResults"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/secondary_text"
+        app:backgroundTint="@color/primary_button"
+        android:layout_marginTop="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        style="@style/Widget.MaterialComponents.Button"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

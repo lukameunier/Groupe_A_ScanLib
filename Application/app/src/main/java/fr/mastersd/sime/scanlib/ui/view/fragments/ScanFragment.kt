@@ -18,7 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
-import fr.mastersd.sime.scanlib.R
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
@@ -30,14 +29,12 @@ class ScanFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: BookViewModel by viewModels()
-    private val scanViewModel: ScanViewModel by viewModels()
 
     private val cameraProviderFuture by lazy {
         ProcessCameraProvider.getInstance(requireContext())
     }
 
     private var camera: Camera? = null
-    private var syncStartTime: Long = 0L
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startCamera() else handleCameraDenied()
@@ -51,35 +48,21 @@ class ScanFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        cleanCaptureCache()
+        checkCameraPermission()
 
-        viewModel.setContext(requireContext())
-
-        // Observe les résultats du traitement OCR + appel API
-        viewModel.syncResult.observe(viewLifecycleOwner) { result ->
-            val duration = System.currentTimeMillis() - syncStartTime
-            Log.d("ScanFragment", "syncResult reçu : ${result.foundBooks.size} livres en $duration ms")
-
-            if (result.foundBooks.isNotEmpty()) {
-                val action = ScanFragmentDirections
-                    .actionScanFragmentToScanResultFragment(result.foundBooks.toTypedArray())
-
-                val navOptions = androidx.navigation.navOptions {
-                    popUpTo(R.id.scanFragment) {
-                        inclusive = true
-                    }
-                }
-
-                findNavController().navigate(action, navOptions)
-            } else {
-                Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
+        viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
+            if (!path.isNullOrBlank()) {
+                val action = ScanFragmentDirections.actionScanFragmentToProcessingFragment(path)
+                findNavController().navigate(action)
+                viewModel.clearLastImagePath()
             }
         }
 
-        setupObservers()
-        setupListeners()
+        binding.captureButton.setOnClickListener {
+            viewModel.captureImage(requireContext())
+        }
+
         setupTouchToFocus()
-        checkCameraPermission()
     }
 
     override fun onDestroyView() {
@@ -88,56 +71,34 @@ class ScanFragment : Fragment() {
     }
 
     /**
-     * Nettoie le dossier cache/captures au démarrage du fragment
+     * Initialise CameraX et bind le flux sur la preview
      */
-    private fun cleanCaptureCache() {
-        val context = requireContext()
-        val captureDir = java.io.File(context.cacheDir, "captures")
-        if (captureDir.exists()) {
-            captureDir.listFiles()?.forEach { file ->
-                // Supprime seulement les fichiers, pas les dossiers
-                if (file.isFile) file.delete()
-            }
-        }
-    }
+    private fun startCamera() {
+        cameraProviderFuture.addListener({
+            val provider = cameraProviderFuture.get()
 
-    /**
-     * Observe les données des ViewModels :
-     * - image capturée
-     * - image traitée (bitmap)
-     * - textes extraits par OCR
-     */
-    private fun setupObservers() {
-        viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
-            scanViewModel.processImage(path)
-        }
+            val preview = Preview.Builder()
+                .setTargetRotation(binding.previewView.display.rotation)
+                .build()
+                .also { it.surfaceProvider = binding.previewView.surfaceProvider }
 
-        scanViewModel.ocrTexts.observe(viewLifecycleOwner) { texts ->
-            val nonEmptyTexts = texts.filter { it.isNotBlank() }
-            if (nonEmptyTexts.isNotEmpty()) {
-                syncStartTime = System.currentTimeMillis()
-                viewModel.syncBooksFromValTexts(nonEmptyTexts)
-            } else {
-                Toast.makeText(requireContext(), "Aucun texte détecté", Toast.LENGTH_SHORT).show()
-            }
-            // Suppression de l'image après traitement OCR
-            viewModel.lastImagePath.value?.let { path ->
-                try {
-                    val file = java.io.File(path)
-                    if (file.exists()) file.delete()
-                } catch (e: Exception) {
-                    Log.e("ScanFragment", "Erreur suppression image $path", e)
-                }
-            }
-        }
-    }
+            val imageCapture = ImageCapture.Builder()
+                .setTargetRotation(binding.previewView.display.rotation)
+                .build()
+                .also(viewModel::setImageCapture)
 
-    /**
-     * Configure les interactions utilisateur :
-     * - capture avec le bouton central
-     */
-    private fun setupListeners() = with(binding) {
-        captureButton.setOnClickListener { viewModel.captureImage() }
+            try {
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageCapture
+                )
+            } catch (e: Exception) {
+                Log.e("ScanFragment", "Échec bind camera", e)
+            }
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     /**
@@ -202,37 +163,6 @@ class ScanFragment : Fragment() {
             }
             else -> permissionLauncher.launch(Manifest.permission.CAMERA)
         }
-    }
-
-    /**
-     * Initialise CameraX et bind le flux sur la preview
-     */
-    private fun startCamera() {
-        cameraProviderFuture.addListener({
-            val provider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder()
-                .setTargetRotation(binding.previewView.display.rotation)
-                .build()
-                .also { it.surfaceProvider = binding.previewView.surfaceProvider }
-
-            val imageCapture = ImageCapture.Builder()
-                .setTargetRotation(binding.previewView.display.rotation)
-                .build()
-                .also(viewModel::setImageCapture)
-
-            try {
-                provider.unbindAll()
-                camera = provider.bindToLifecycle(
-                    this,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    preview,
-                    imageCapture
-                )
-            } catch (e: Exception) {
-                Log.e("ScanFragment", "Échec bind camera", e)
-            }
-        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     /**
