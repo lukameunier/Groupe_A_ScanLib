@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
+import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import fr.mastersd.sime.scanlib.data.FilterState
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,6 +46,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val list = bookRepository.getAllBooks()
             _books.postValue(list)
+            _currentGroupName.postValue("Tous")
         }
     }
 
@@ -139,4 +141,55 @@ class HomeViewModel @Inject constructor(
             _books.postValue(finalResult)
         }
     }
+
+//=================================================================
+    private val _groups = MutableLiveData<List<FavoriteGroup>>()
+    val groups: LiveData<List<FavoriteGroup>> get() = _groups
+
+    private val _currentGroupName = MutableLiveData<String>("Tous") // par défaut "Tous"
+    val currentGroupName: LiveData<String> get() = _currentGroupName
+
+
+    fun loadGroups() {
+        viewModelScope.launch {
+            val list = bookRepository.getAllFavoriteGroups()
+            _groups.postValue(list)
+        }
+    }
+
+    fun filterByGroup(groupId: Long) {
+        viewModelScope.launch {
+            val books = bookRepository.getBooksByGroup(groupId)
+            _books.postValue(books)
+            // On cherche le nom du groupe sélectionné
+            val group = _groups.value?.find { it.id == groupId }
+            if (group != null) {
+                _currentGroupName.postValue(group.name)
+            }
+        }
+    }
+
+    fun createFavoriteGroup(name: String) {
+        viewModelScope.launch {
+            bookRepository.insertFavoriteGroup(FavoriteGroup(name = name))
+            loadGroups() // Recharge la liste des groupes
+        }
+    }
+
+    // Supprimer un groupe
+    fun deleteGroup(groupId: Long) {
+        viewModelScope.launch {
+            bookRepository.deleteGroup(groupId)
+            loadGroups() // recharge la liste
+        }
+    }
+
+    // Renommer un groupe
+    fun renameGroup(groupId: Long, newName: String) {
+        viewModelScope.launch {
+            bookRepository.renameGroup(groupId, newName)
+            loadGroups()
+        }
+    }
+
 }

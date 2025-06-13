@@ -5,51 +5,44 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
-import java.io.File
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import fr.mastersd.sime.scanlib.R
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import fr.mastersd.sime.scanlib.R
+import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import fr.mastersd.sime.scanlib.data.FilterState
 import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
+import fr.mastersd.sime.scanlib.ui.adapter.GroupManageAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.HomeViewModel
-import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
-import kotlin.getValue
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
     private val homeViewModel: HomeViewModel by viewModels()
-    private val scanViewModel: ScanViewModel by viewModels()
     private lateinit var adapter: BookAdapter
-
-    private var genreListCache = emptyList<String>()
-    private var yearListCache = emptyList<String>()
-    private var scoreListCache = emptyList<Double>()
+    private var genreListCache: List<String> = emptyList()
+    private var yearListCache: List<String> = emptyList()
+    private var scoreListCache: List<Double> = emptyList()
     private var currentFilter = FilterState()
+    private var currentGroups: List<FavoriteGroup> = emptyList()
 
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            val tempFile = kotlin.io.path.createTempFile(suffix = ".jpg").toFile()
-            requireContext().contentResolver.openInputStream(it)?.use { input ->
-                tempFile.outputStream().use { output -> input.copyTo(output) }
-            }
-            scanViewModel.processImageAndFetchBooks(tempFile.absolutePath)
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -62,6 +55,7 @@ class HomeFragment : Fragment() {
         homeViewModel.loadGenres()
         homeViewModel.loadYears()
         homeViewModel.loadScores()
+        homeViewModel.loadGroups()
     }
 
     private fun setupAdapter() = with(binding) {
@@ -84,13 +78,11 @@ class HomeFragment : Fragment() {
             homeViewModel.applyCombinedFilters(newFilter)
             updateFilterDisplay()
         }
-        scanViewModel.foundBooks.observe(viewLifecycleOwner) { books ->
-            if (books.isNotEmpty()) {
-                val action = HomeFragmentDirections.actionHomeFragmentToScanResultFragment(books.toTypedArray())
-                findNavController().navigate(action)
-            } else {
-                Toast.makeText(requireContext(), "Aucun livre trouvé pour cette image", Toast.LENGTH_SHORT).show()
-            }
+        homeViewModel.currentGroupName.observe(viewLifecycleOwner) { groupName ->
+            binding.groupButton.text = groupName
+        }
+        homeViewModel.groups.observe(viewLifecycleOwner) { groups ->
+            currentGroups = groups
         }
     }
 
@@ -137,6 +129,9 @@ class HomeFragment : Fragment() {
             homeViewModel.resetFilters()
             toast("Filtres réinitialisés")
         }
+
+        // Bouton groupes
+        groupButton.setOnClickListener { showManageGroupsDialog() }
     }
 
     private fun showAddBookSheet() {
@@ -156,9 +151,9 @@ class HomeFragment : Fragment() {
             dialog.dismiss()
             toast("À implémenter...")
             /*
-            galleryLauncher.launch("image/*")
+           galleryLauncher.launch("image/*")
+           */
             */
-             */
         }
     }
 
@@ -241,7 +236,9 @@ class HomeFragment : Fragment() {
             return
         }
         PopupMenu(requireContext(), anchor).apply {
-            yearListCache.forEachIndexed { index, year -> menu.add(0, index, index, year) }
+            yearListCache.forEachIndexed { index, year ->
+                menu.add(0, index, index, year)
+            }
             setOnMenuItemClickListener { item ->
                 currentFilter = currentFilter.copy(year = yearListCache[item.itemId])
                 homeViewModel.updateFilter(currentFilter)
@@ -278,20 +275,81 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         homeViewModel.loadBooks()
-        cleanCaptureCache()
-    }
-
-    private fun cleanCaptureCache() {
-        val context = requireContext()
-        val captureDir = File(context.cacheDir, "captures")
-        if (captureDir.exists()) {
-            captureDir.listFiles()?.forEach { file ->
-                if (file.isFile) file.delete()
-            }
-        }
     }
 
     private fun toast(msg: String) =
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-}
 
+    // ------------------- GROUPES ---------------------
+
+    private fun showManageGroupsDialog() {
+        val allGroups = listOf(FavoriteGroup(-1, "Tous")) + currentGroups
+
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_manage_groups, null)
+        val recyclerView = sheetView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.groupsRecyclerView)
+        val createGroupBtn = sheetView.findViewById<MaterialButton>(R.id.createGroupButton)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(sheetView)
+
+        val adapter = GroupManageAdapter(
+            groups = allGroups,
+            onSelect = { group ->
+                if (group.id == -1L) {
+                    homeViewModel.loadBooks()
+                } else {
+                    homeViewModel.filterByGroup(group.id)
+                }
+                dialog.dismiss()
+            },
+            onEdit = { group ->
+                if (group.id != -1L) showRenameGroupDialog(group)
+            },
+            onDelete = { group ->
+                if (group.id != -1L) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Supprimer le groupe")
+                        .setMessage("Confirmer la suppression du groupe '${group.name}' ?")
+                        .setPositiveButton("Supprimer") { _, _ -> homeViewModel.deleteGroup(group.id) }
+                        .setNegativeButton("Annuler", null)
+                        .show()
+                }
+            }
+        )
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        createGroupBtn.setOnClickListener { showCreateGroupDialog() }
+        dialog.show()
+        homeViewModel.loadGroups()
+    }
+
+    private fun showCreateGroupDialog() {
+        val editText = EditText(requireContext()).apply { hint = "Nom du groupe" }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Créer un groupe")
+            .setView(editText)
+            .setPositiveButton("Créer") { _, _ ->
+                val name = editText.text.toString().trim()
+                if (name.isNotEmpty()) homeViewModel.createFavoriteGroup(name)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
+    private fun showRenameGroupDialog(group: FavoriteGroup) {
+        val editText = EditText(requireContext()).apply {
+            setText(group.name)
+            setSelection(group.name.length)
+        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Renommer le groupe")
+            .setView(editText)
+            .setPositiveButton("Valider") { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isNotEmpty() && newName != group.name)
+                    homeViewModel.renameGroup(group.id, newName)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+}
