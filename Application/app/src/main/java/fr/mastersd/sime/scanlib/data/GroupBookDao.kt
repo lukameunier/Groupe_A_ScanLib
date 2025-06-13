@@ -9,7 +9,7 @@ import androidx.room.Transaction
 @Dao
 interface GroupBookDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertGroup(group: FavoriteGroup): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -52,6 +52,9 @@ interface GroupBookDao {
 
     @Query("UPDATE favorite_groups SET name = :newName WHERE id = :groupId")
     suspend fun renameGroup(groupId: Long, newName: String)
+
+    @Query("SELECT * FROM favorite_groups WHERE name = :name LIMIT 1")
+    suspend fun findGroupByName(name: String): FavoriteGroup?
 
 
 

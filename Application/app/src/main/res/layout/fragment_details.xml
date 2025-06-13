@@ -257,31 +257,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="end"
         android:paddingBottom="24dp"
         android:paddingTop="8dp"
         android:background="@color/primary_background">
 
-        <!-- Icône à GAUCHE -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/addToGroupsButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:backgroundTint="@color/primary_button"
-            app:icon="@drawable/outline_bookmark_add_24"
-            app:iconTint="@color/secondary_text"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            android:contentDescription="@string/ajouter_aux_groupes" />
-
-        <!-- Espace extensible -->
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <!-- Bouton Enregistrer à DROITE -->
+        <!-- Bouton AddToGroups affiché par défaut -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addToGroupsButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="@color/primary_button"
+            app:icon="@drawable/outline_bookmark_add_24"
+            app:iconTint="@color/secondary_text"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            android:contentDescription="@string/ajouter_aux_groupes"
+            android:visibility="visible" />
+
+        <!-- Bouton Enregistrer masqué par défaut -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/save_button"
             style="@style/Widget.MaterialComponents.Button"
@@ -292,6 +293,8 @@
             android:text="@string/save_button_text"
             android:textColor="@color/secondary_text"
             app:iconGravity="textStart"
-            app:iconPadding="8dp" />
+            app:iconPadding="8dp"
+            android:visibility="gone"/>
     </LinearLayout>
+
 </LinearLayout>

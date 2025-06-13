@@ -169,10 +169,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun createFavoriteGroup(name: String) {
-        viewModelScope.launch {
-            bookRepository.insertFavoriteGroup(FavoriteGroup(name = name))
-            loadGroups() // Recharge la liste des groupes
+    fun addGroupLocally(group: FavoriteGroup) {
+        val groupsNow = _groups.value?.toMutableList() ?: mutableListOf()
+        if (groupsNow.none { it.id == group.id }) {
+            groupsNow.add(group)
+            _groups.value = groupsNow
         }
     }
 
@@ -191,5 +192,18 @@ class HomeViewModel @Inject constructor(
             loadGroups()
         }
     }
+
+    fun checkOrCreateGroup(name: String, callback: (FavoriteGroup) -> Unit) {
+        viewModelScope.launch {
+            val existing = bookRepository.findGroupByName(name)
+            if (existing != null) {
+                callback(existing)
+            } else {
+                val id = bookRepository.insertFavoriteGroup(FavoriteGroup(name = name))
+                callback(FavoriteGroup(id, name))
+            }
+        }
+    }
+
 
 }

@@ -61,4 +61,5 @@
     <string name="images_with_boxes_desc">Texte qui spécifie l\'image avec boîtes</string>
     <string name="imageview_original">Image originale</string>
     <string name="imageview_with_boxes">Image annotée</string>
+    <string name="ajouter_un_groupe">Ajouter à un groupe</string>
 </resources>

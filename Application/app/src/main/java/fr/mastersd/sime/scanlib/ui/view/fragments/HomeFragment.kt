@@ -315,7 +315,18 @@ class HomeFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = groupManageAdapter
 
-        createGroupBtn.setOnClickListener { showCreateGroupDialog() }
+        createGroupBtn.setOnClickListener {
+            showCreateGroupDialog { group ->
+                homeViewModel.addGroupLocally(group)
+
+                // Mets à jour l'adapter immédiatement
+                val allGroups = listOf(FavoriteGroup(-1, "Tous")) + (homeViewModel.groups.value ?: emptyList())
+                groupManageAdapter?.updateGroups(allGroups)
+
+                // Recharge depuis la base après coup pour l'intégrité (Room)
+                homeViewModel.loadGroups()
+            }
+        }
 
         // Observe les groupes ici, pour mettre à jour la liste dynamiquement
         homeViewModel.groups.observe(viewLifecycleOwner) { groups ->
@@ -327,14 +338,18 @@ class HomeFragment : Fragment() {
         homeViewModel.loadGroups()
     }
 
-    private fun showCreateGroupDialog() {
+    private fun showCreateGroupDialog(onGroupCreated: (FavoriteGroup) -> Unit = {}) {
         val editText = EditText(requireContext()).apply { hint = "Nom du groupe" }
         AlertDialog.Builder(requireContext())
             .setTitle("Créer un groupe")
             .setView(editText)
             .setPositiveButton("Créer") { _, _ ->
                 val name = editText.text.toString().trim()
-                if (name.isNotEmpty()) homeViewModel.createFavoriteGroup(name)
+                if (name.isNotEmpty()) {
+                    homeViewModel.checkOrCreateGroup(name) { group ->
+                        onGroupCreated(group)
+                    }
+                }
             }
             .setNegativeButton("Annuler", null)
             .show()

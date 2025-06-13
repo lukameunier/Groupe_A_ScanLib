@@ -6,6 +6,7 @@
     android:background="@drawable/bottom_sheet_top_rounded">
 
     <TextView
+        android:id="@+id/groupSheetTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/les_groupes"

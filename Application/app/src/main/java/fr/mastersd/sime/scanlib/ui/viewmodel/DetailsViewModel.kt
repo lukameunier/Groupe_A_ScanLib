@@ -51,5 +51,18 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
+    fun checkOrCreateGroup(name: String, callback: (FavoriteGroup) -> Unit) {
+        viewModelScope.launch {
+            val existing = repository.findGroupByName(name)
+            if (existing != null) {
+                callback(existing)
+            } else {
+                val id = repository.insertFavoriteGroup(FavoriteGroup(name = name))
+                callback(FavoriteGroup(id, name))
+            }
+        }
+    }
+
+
 
 }

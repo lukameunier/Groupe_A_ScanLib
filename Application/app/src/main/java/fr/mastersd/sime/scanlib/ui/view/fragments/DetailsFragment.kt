@@ -15,6 +15,7 @@ import fr.mastersd.sime.scanlib.R
 import android.widget.EditText
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
@@ -24,6 +25,13 @@ import fr.mastersd.sime.scanlib.ui.viewmodel.DetailsViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
+import fr.mastersd.sime.scanlib.ui.adapter.BookGroupSelectAdapter
 
 
 @AndroidEntryPoint
@@ -35,10 +43,7 @@ class DetailsFragment : Fragment() {
     private lateinit var editTexts: List<EditText>
     private var isEditMode = false
     //=============================================================
-    private var currentGroups: List<FavoriteGroup> = emptyList()
-    private var currentBookGroupIds: List<Long> = emptyList()
-    private var waitingForGroups = false
-    private var waitingForBookGroups = false
+    private var suppressNextGroupObserverUpdate = false
 
 
     override fun onCreateView(
@@ -101,6 +106,7 @@ class DetailsFragment : Fragment() {
             detailsViewModel.updateBook(newBook)
             originalBook = newBook // Réinitialise la référence pour la comparaison
             binding.saveButton.visibility = View.GONE
+            binding.addToGroupsButton.visibility = View.VISIBLE
             Toast.makeText(requireContext(), "Modifications enregistrées", Toast.LENGTH_SHORT).show()
         }
 
@@ -152,61 +158,114 @@ class DetailsFragment : Fragment() {
         binding.saveButton.visibility = View.GONE
 
 //================================================================================
-        detailsViewModel.groups.observe(viewLifecycleOwner) { groups ->
-            currentGroups = groups
-            if (waitingForGroups && waitingForBookGroups) {
-                showGroupSelectionDialog()
-                waitingForGroups = false
-                waitingForBookGroups = false
-            }
-        }
-        detailsViewModel.bookGroupIds.observe(viewLifecycleOwner) { groupIds ->
-            currentBookGroupIds = groupIds
-            if (waitingForGroups && waitingForBookGroups) {
-                showGroupSelectionDialog()
-                waitingForGroups = false
-                waitingForBookGroups = false
-            }
-        }
+        // === GESTION DES GROUPES ===
 
-        // Charger les groupes
-        detailsViewModel.loadGroups()
-
-        // Configurer le bouton "Ajouter aux groupes"
         binding.addToGroupsButton.setOnClickListener {
-            waitingForGroups = true
-            waitingForBookGroups = true
             detailsViewModel.loadGroups()
             detailsViewModel.loadBookGroupIds(originalBook.id)
+            observeOnce(detailsViewModel.groups) { loadedGroups ->
+                observeOnce(detailsViewModel.bookGroupIds) { groupIds ->
+                    when {
+                        loadedGroups == null -> {
+                            Toast.makeText(requireContext(), "Chargement des groupes...", Toast.LENGTH_SHORT).show()
+                        }
+                        loadedGroups.isEmpty() -> {
+                            showCreateGroupDialog { group ->
+                                detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                                detailsViewModel.loadGroups()
+                                detailsViewModel.loadBookGroupIds(originalBook.id)
+                                observeOnce(detailsViewModel.groups) { updatedGroups ->
+                                    observeOnce(detailsViewModel.bookGroupIds) { updatedIds ->
+                                        showGroupSelectionSheet(updatedGroups ?: emptyList(), updatedIds)
+                                    }
+                                }
+                            }
+                        }
+                        else -> {
+                            showGroupSelectionSheet(loadedGroups, groupIds)
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private fun showGroupSelectionDialog() {
-        val groups = currentGroups
-        val groupIds = currentBookGroupIds
-
-        val groupNames = groups.map { it.name }.toTypedArray()
-        val checkedItems = groups.map { group -> groupIds.contains(group.id) }.toBooleanArray()
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Gérer l'appartenance aux groupes")
-            .setMultiChoiceItems(groupNames, checkedItems) { _, which, isChecked ->
-                checkedItems[which] = isChecked
+    private fun <T> observeOnce(liveData: LiveData<T>, onChange: (T) -> Unit) {
+        val observer = object : Observer<T> {
+            override fun onChanged(t: T) {
+                onChange(t)
+                liveData.removeObserver(this)
             }
-            .setPositiveButton("Valider") { _, _ ->
-                groups.forEachIndexed { index, group ->
-                    val wasInGroup = groupIds.contains(group.id)
-                    val nowInGroup = checkedItems[index]
-                    when {
-                        !wasInGroup && nowInGroup -> detailsViewModel.addBookToGroup(originalBook.id, group.id)
-                        wasInGroup && !nowInGroup -> detailsViewModel.removeBookFromGroup(originalBook.id, group.id)
+        }
+        liveData.observe(viewLifecycleOwner, observer)
+    }
+
+    private fun showCreateGroupDialog(onGroupCreated: (FavoriteGroup) -> Unit) {
+        val editText = EditText(requireContext()).apply { hint = "Nom du groupe" }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Créer un groupe")
+            .setView(editText)
+            .setPositiveButton("Créer") { _, _ ->
+                val name = editText.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    detailsViewModel.checkOrCreateGroup(name) { group ->
+                        onGroupCreated(group)
                     }
                 }
-                Toast.makeText(requireContext(), "Mise à jour des groupes effectuée", Toast.LENGTH_SHORT).show()
-                detailsViewModel.loadBookGroupIds(originalBook.id)
             }
             .setNegativeButton("Annuler", null)
             .show()
+    }
+
+    private fun showGroupSelectionSheet(groups: List<FavoriteGroup>, bookGroupIds: List<Long>) {
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_manage_groups, null)
+        val recyclerView = sheetView.findViewById<RecyclerView>(R.id.groupsRecyclerView)
+        val createGroupBtn = sheetView.findViewById<MaterialButton>(R.id.createGroupButton)
+        val titleView = sheetView.findViewById<TextView>(R.id.groupSheetTitle)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(sheetView)
+
+        titleView?.text = getString(R.string.ajouter_un_groupe)
+
+        val adapter = BookGroupSelectAdapter(
+            groups,
+            bookGroupIds.toMutableSet(),
+            onGroupCheckedChanged = { group, isChecked ->
+                if (isChecked) detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                else detailsViewModel.removeBookFromGroup(originalBook.id, group.id)
+                detailsViewModel.loadBookGroupIds(originalBook.id)
+            }
+        )
+
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        // Observer pour mettre à jour la sélection après chaque modification
+        detailsViewModel.bookGroupIds.observe(viewLifecycleOwner) { newIds ->
+            if (suppressNextGroupObserverUpdate) {
+                suppressNextGroupObserverUpdate = false
+                return@observe
+            }
+            adapter.updateGroups(groups, newIds.toSet())
+        }
+
+        createGroupBtn.setOnClickListener {
+            showCreateGroupDialog { group ->
+                val displayedGroups = adapter.groupsList.toMutableList()
+                if (displayedGroups.none { it.id == group.id }) {
+                    displayedGroups.add(group)
+                    adapter.updateGroups(displayedGroups, adapter.selectedGroupIds + group.id)
+                }
+                // Bloque l'observer du prochain update pour éviter l'écrasement de l’UI instantanée
+                suppressNextGroupObserverUpdate = true
+
+                detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                detailsViewModel.loadGroups()
+                detailsViewModel.loadBookGroupIds(originalBook.id)
+            }
+        }
+
+        dialog.show()
     }
 
 //=======================================================================
@@ -248,11 +307,10 @@ class DetailsFragment : Fragment() {
             industryIdentifiers = binding.isbnEditText.text.toString().split(",").map { it.trim() }.filter { it.isNotEmpty() },
             description = binding.synopsisContent.text.toString().ifBlank { null }
         )
-        binding.saveButton.visibility =
-            if (currentBook != originalBook) View.VISIBLE else View.GONE
+
+        val modified = currentBook != originalBook
+        binding.saveButton.visibility = if (modified) View.VISIBLE else View.GONE
+        binding.addToGroupsButton.visibility = if (modified) View.GONE else View.VISIBLE
     }
-
-
-
 
 }

@@ -134,5 +134,8 @@ class BookRepository @Inject constructor(
         groupBookDao.renameGroup(groupId, newName)
     }
 
+    suspend fun findGroupByName(name: String): FavoriteGroup? {
+        return groupBookDao.findGroupByName(name)
+    }
 
 }
