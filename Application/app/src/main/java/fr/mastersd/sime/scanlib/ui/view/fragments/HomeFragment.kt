@@ -37,6 +37,9 @@ class HomeFragment : Fragment() {
     private var scoreListCache: List<Double> = emptyList()
     private var currentFilter = FilterState()
     private var currentGroups: List<FavoriteGroup> = emptyList()
+    private var groupManageAdapter: GroupManageAdapter? = null
+    private var groupDialog: BottomSheetDialog? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -283,27 +286,21 @@ class HomeFragment : Fragment() {
     // ------------------- GROUPES ---------------------
 
     private fun showManageGroupsDialog() {
-        val allGroups = listOf(FavoriteGroup(-1, "Tous")) + currentGroups
-
         val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_manage_groups, null)
         val recyclerView = sheetView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.groupsRecyclerView)
         val createGroupBtn = sheetView.findViewById<MaterialButton>(R.id.createGroupButton)
-        val dialog = BottomSheetDialog(requireContext())
-        dialog.setContentView(sheetView)
+        groupDialog = BottomSheetDialog(requireContext())
+        groupDialog?.setContentView(sheetView)
 
-        val adapter = GroupManageAdapter(
-            groups = allGroups,
+        // Adapter initialisé avec une liste vide
+        groupManageAdapter = GroupManageAdapter(
+            groups = emptyList(),
             onSelect = { group ->
-                if (group.id == -1L) {
-                    homeViewModel.loadBooks()
-                } else {
-                    homeViewModel.filterByGroup(group.id)
-                }
-                dialog.dismiss()
+                if (group.id == -1L) homeViewModel.loadBooks()
+                else homeViewModel.filterByGroup(group.id)
+                groupDialog?.dismiss()
             },
-            onEdit = { group ->
-                if (group.id != -1L) showRenameGroupDialog(group)
-            },
+            onEdit = { group -> if (group.id != -1L) showRenameGroupDialog(group) },
             onDelete = { group ->
                 if (group.id != -1L) {
                     AlertDialog.Builder(requireContext())
@@ -316,10 +313,17 @@ class HomeFragment : Fragment() {
             }
         )
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.adapter = adapter
+        recyclerView.adapter = groupManageAdapter
 
         createGroupBtn.setOnClickListener { showCreateGroupDialog() }
-        dialog.show()
+
+        // Observe les groupes ici, pour mettre à jour la liste dynamiquement
+        homeViewModel.groups.observe(viewLifecycleOwner) { groups ->
+            val allGroups = listOf(FavoriteGroup(-1, "Tous")) + groups
+            groupManageAdapter?.updateGroups(allGroups)
+        }
+
+        groupDialog?.show()
         homeViewModel.loadGroups()
     }
 

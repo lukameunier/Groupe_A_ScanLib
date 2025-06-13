@@ -10,7 +10,7 @@ import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import fr.mastersd.sime.scanlib.R
 
 class GroupManageAdapter(
-    private val groups: List<FavoriteGroup>,
+    private var groups: List<FavoriteGroup> = emptyList(),
     private val onSelect: (FavoriteGroup) -> Unit,
     private val onEdit: (FavoriteGroup) -> Unit,
     private val onDelete: (FavoriteGroup) -> Unit
@@ -43,4 +43,9 @@ class GroupManageAdapter(
     }
 
     override fun getItemCount(): Int = groups.size
+
+    fun updateGroups(newGroups: List<FavoriteGroup>) {
+        groups = newGroups
+        notifyDataSetChanged()
+    }
 }
