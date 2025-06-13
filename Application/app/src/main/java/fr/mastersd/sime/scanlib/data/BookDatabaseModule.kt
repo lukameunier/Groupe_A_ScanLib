@@ -28,7 +28,7 @@ object BookDatabaseModule {
     fun provideBookDao(database: BookDatabase): BookDao = database.bookDao()
 
     @Provides
-    fun provideFavoriteGroupDao(database: BookDatabase): FavoriteGroupDao =
+    fun provideFavoriteGroupDao(database: BookDatabase): GroupBookDao =
         database.favoriteGroupDao()
 
 }

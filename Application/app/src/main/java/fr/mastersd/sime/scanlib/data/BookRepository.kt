@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
-    private val favoriteGroupDao: FavoriteGroupDao,
+    private val groupBookDao: GroupBookDao,
     val googleBooksService: GoogleBooksService = GoogleBooksService()
 ) {
     suspend fun syncBooksFromValTexts(valTexts: List<String>): BookSyncResult = withContext(Dispatchers.IO) {
@@ -101,19 +101,37 @@ class BookRepository @Inject constructor(
 
 //=============================================================
     suspend fun getAllFavoriteGroups(): List<FavoriteGroup> {
-        return favoriteGroupDao.getAllGroupsSimple()
+        return groupBookDao.getAllGroupsSimple()
     }
 
     suspend fun getBooksByGroup(groupId: Long): List<Book> {
-        return favoriteGroupDao.getBooksByGroup(groupId)
+        return groupBookDao.getBooksByGroup(groupId)
     }
 
     suspend fun insertFavoriteGroup(group: FavoriteGroup): Long {
-        return favoriteGroupDao.insertGroup(group)
+        return groupBookDao.insertGroup(group)
     }
 
     suspend fun addBookToGroup(bookId: String, groupId: Long) {
-        favoriteGroupDao.insertCrossRef(BookGroupCrossRef(bookId, groupId))
+        groupBookDao.insertCrossRef(BookGroupCrossRef(bookId, groupId))
     }
+
+    suspend fun removeBookFromGroup(bookId: String, groupId: Long) {
+        groupBookDao.removeBookFromGroup(bookId, groupId)
+    }
+
+    suspend fun getGroupIdsForBook(bookId: String): List<Long> {
+        return groupBookDao.getGroupIdsForBook(bookId)
+    }
+
+    suspend fun deleteGroup(groupId: Long) {
+        groupBookDao.deleteGroupById(groupId)
+        groupBookDao.removeAllBooksFromGroup(groupId) // si tu veux tout nettoyer
+    }
+
+    suspend fun renameGroup(groupId: Long, newName: String) {
+        groupBookDao.renameGroup(groupId, newName)
+    }
+
 
 }

@@ -35,4 +35,21 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
+    //===============================================================
+    val bookGroupIds = MutableLiveData<List<Long>>() // Les groupes du livre
+
+    fun loadBookGroupIds(bookId: String) {
+        viewModelScope.launch {
+            val ids = repository.getGroupIdsForBook(bookId)
+            bookGroupIds.postValue(ids)
+        }
+    }
+
+    fun removeBookFromGroup(bookId: String, groupId: Long) {
+        viewModelScope.launch {
+            repository.removeBookFromGroup(bookId, groupId)
+        }
+    }
+
+
 }

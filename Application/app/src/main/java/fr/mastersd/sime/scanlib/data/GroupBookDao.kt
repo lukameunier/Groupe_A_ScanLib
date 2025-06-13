@@ -7,7 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 
 @Dao
-interface FavoriteGroupDao {
+interface GroupBookDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGroup(group: FavoriteGroup): Long
@@ -37,5 +37,22 @@ interface FavoriteGroupDao {
 
     @Query("SELECT * FROM favorite_groups")
     suspend fun getAllGroupsSimple(): List<FavoriteGroup>
+
+    @Query("DELETE FROM BookGroupCrossRef WHERE bookId = :bookId AND groupId = :groupId")
+    suspend fun removeBookFromGroup(bookId: String, groupId: Long)
+
+    @Query("SELECT groupId FROM BookGroupCrossRef WHERE bookId = :bookId")
+    suspend fun getGroupIdsForBook(bookId: String): List<Long>
+
+    @Query("DELETE FROM favorite_groups WHERE id = :groupId")
+    suspend fun deleteGroupById(groupId: Long)
+
+    @Query("DELETE FROM BookGroupCrossRef WHERE groupId = :groupId")
+    suspend fun removeAllBooksFromGroup(groupId: Long)
+
+    @Query("UPDATE favorite_groups SET name = :newName WHERE id = :groupId")
+    suspend fun renameGroup(groupId: Long, newName: String)
+
+
 
 }

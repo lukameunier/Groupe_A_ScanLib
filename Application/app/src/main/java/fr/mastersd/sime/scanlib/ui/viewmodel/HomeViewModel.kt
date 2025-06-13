@@ -46,6 +46,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val list = bookRepository.getAllBooks()
             _books.postValue(list)
+            _currentGroupName.postValue("Tous")
         }
     }
 
@@ -145,6 +146,10 @@ class HomeViewModel @Inject constructor(
     private val _groups = MutableLiveData<List<FavoriteGroup>>()
     val groups: LiveData<List<FavoriteGroup>> get() = _groups
 
+    private val _currentGroupName = MutableLiveData<String>("Tous") // par défaut "Tous"
+    val currentGroupName: LiveData<String> get() = _currentGroupName
+
+
     fun loadGroups() {
         viewModelScope.launch {
             val list = bookRepository.getAllFavoriteGroups()
@@ -156,6 +161,11 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val books = bookRepository.getBooksByGroup(groupId)
             _books.postValue(books)
+            // On cherche le nom du groupe sélectionné
+            val group = _groups.value?.find { it.id == groupId }
+            if (group != null) {
+                _currentGroupName.postValue(group.name)
+            }
         }
     }
 
@@ -166,5 +176,20 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // Supprimer un groupe
+    fun deleteGroup(groupId: Long) {
+        viewModelScope.launch {
+            bookRepository.deleteGroup(groupId)
+            loadGroups() // recharge la liste
+        }
+    }
+
+    // Renommer un groupe
+    fun renameGroup(groupId: Long, newName: String) {
+        viewModelScope.launch {
+            bookRepository.renameGroup(groupId, newName)
+            loadGroups()
+        }
+    }
 
 }

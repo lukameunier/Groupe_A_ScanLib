@@ -5,7 +5,7 @@
     <string name="hint_search_bar_text">Rechercher dans la bibliothèque...</string>
     <string name="genre_button_text">Genre</string>
     <string name="filter_text_button">Filtre</string>
-    <string name="group_text_button">Group</string>
+    <string name="group_text_button">Tous</string>
     <string name="content_desc_book_cover">Image de la couverture d\'un livre scanné</string>
     <string name="book_title_text">Titre du livre</string>
     <string name="capture_photo">Bouton qui permet de prendre une photo</string>
@@ -48,4 +48,9 @@
     <string name="filtrer_par_ann_e_popup">Filtrer par année</string>
     <string name="derniers_abouts_popup">Derniers abouts</string>
     <string name="ajouter_aux_groupes">Ajouter à un groupe</string>
+    <string name="nom_du_groupe">Nom du groupe</string>
+    <string name="edit_group">Edit group</string>
+    <string name="delete_group">Delete group</string>
+    <string name="create_groupe">Créer un groupe</string>
+    <string name="les_groupes">Gérer les groupes</string>
 </resources>

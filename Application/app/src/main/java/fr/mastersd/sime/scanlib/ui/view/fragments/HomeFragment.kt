@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
@@ -15,12 +16,16 @@ import androidx.fragment.app.viewModels
 import fr.mastersd.sime.scanlib.R
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.AndroidEntryPoint
+import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import fr.mastersd.sime.scanlib.data.FilterState
 import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
+import fr.mastersd.sime.scanlib.ui.adapter.GroupManageAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.HomeViewModel
 
 @AndroidEntryPoint
@@ -34,6 +39,7 @@ class HomeFragment : Fragment() {
     private var scoreListCache: List<Double> = emptyList()
 
     private var currentFilter = FilterState()
+    private var currentGroups: List<FavoriteGroup> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -85,6 +91,7 @@ class HomeFragment : Fragment() {
 
         observeViewModel()
 
+        // Ajouter un livre
         // Ajouter un livre
         binding.addBookButton.setOnClickListener {
             val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_add_book, null)
@@ -183,44 +190,9 @@ class HomeFragment : Fragment() {
 //======================================================
         // Charger les groupes
         viewModel.loadGroups()
-
-        binding.groupButton.setOnClickListener { anchor ->
-            val groups = viewModel.groups.value.orEmpty()
-            val popup = PopupMenu(requireContext(), anchor)
-
-            // Option "Tous" en haut
-            popup.menu.add(0, -1, 0, "Tous")
-
-            // Groupes existants (conversion explicite du type)
-            groups.forEachIndexed { index, group ->
-                popup.menu.add(0, group.id.toInt(), index + 1, group.name)
-            }
-
-            // Option "Créer un groupe" tout en bas
-            val createGroupMenuId = Int.MAX_VALUE
-            popup.menu.add(0, createGroupMenuId, groups.size + 1, "Créer un groupe")
-
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    -1 -> {
-                        viewModel.loadBooks()
-                        true
-                    }
-                    createGroupMenuId -> {
-                        showCreateGroupDialog()
-                        true
-                    }
-                    else -> {
-                        viewModel.filterByGroup(item.itemId.toLong())
-                        true
-                    }
-                }
-            }
-
-            popup.show()
+        binding.groupButton.setOnClickListener {
+            showManageGroupsDialog()
         }
-
-
 
 //============================================
         // Charger les filtres
@@ -238,6 +210,13 @@ class HomeFragment : Fragment() {
             currentFilter = newFilter
             viewModel.applyCombinedFilters(newFilter)
             updateFilterDisplay()
+        }
+        //=========================================================
+        viewModel.currentGroupName.observe(viewLifecycleOwner) { groupName ->
+            binding.groupButton.text = groupName
+        }
+        viewModel.groups.observe(viewLifecycleOwner) { groups ->
+            currentGroups = groups
         }
     }
 
@@ -348,24 +327,77 @@ class HomeFragment : Fragment() {
 
     //=======================================
     private fun showCreateGroupDialog() {
-        val editText = EditText(requireContext()).apply {
-            hint = "Nom du groupe"
-            setPadding(16, 16, 16, 16)
-        }
-
+        val editText = EditText(requireContext()).apply { hint = "Nom du groupe" }
         AlertDialog.Builder(requireContext())
-            .setTitle("Créer un nouveau groupe")
+            .setTitle("Créer un groupe")
             .setView(editText)
             .setPositiveButton("Créer") { _, _ ->
-                val groupName = editText.text.toString().trim()
-                if (groupName.isNotEmpty()) {
-                    viewModel.createFavoriteGroup(groupName)
-                } else {
-                    Toast.makeText(requireContext(), "Le nom du groupe ne peut pas être vide", Toast.LENGTH_SHORT).show()
-                }
+                val name = editText.text.toString().trim()
+                if (name.isNotEmpty()) viewModel.createFavoriteGroup(name)
             }
             .setNegativeButton("Annuler", null)
             .show()
+    }
+
+    private fun showRenameGroupDialog(group: FavoriteGroup) {
+        val editText = EditText(requireContext()).apply {
+            setText(group.name)
+            setSelection(group.name.length)
+        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Renommer le groupe")
+            .setView(editText)
+            .setPositiveButton("Valider") { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isNotEmpty() && newName != group.name)
+                    viewModel.renameGroup(group.id, newName)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
+
+    private fun showManageGroupsDialog() {
+        val groups = currentGroups
+        val allGroups = listOf(FavoriteGroup(-1, "Tous")) + groups
+
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_manage_groups, null)
+        val recyclerView = sheetView.findViewById<RecyclerView>(R.id.groupsRecyclerView)
+        val createGroupBtn = sheetView.findViewById<Button>(R.id.createGroupButton)
+        val dialog = BottomSheetDialog(requireContext())
+        dialog.setContentView(sheetView)
+
+        val adapter = GroupManageAdapter(
+            groups = allGroups,
+            onSelect = { group ->
+                if (group.id == -1L) {
+                    viewModel.loadBooks()
+                } else {
+                    viewModel.filterByGroup(group.id)
+                }
+                dialog.dismiss()
+            },
+            onEdit = { group ->
+                if (group.id != -1L) showRenameGroupDialog(group)
+            },
+            onDelete = { group ->
+                if (group.id != -1L) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Supprimer le groupe")
+                        .setMessage("Confirmer la suppression du groupe '${group.name}' ?")
+                        .setPositiveButton("Supprimer") { _, _ -> viewModel.deleteGroup(group.id) }
+                        .setNegativeButton("Annuler", null)
+                        .show()
+                }
+            }
+        )
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+
+        createGroupBtn.setOnClickListener { showCreateGroupDialog() }
+        dialog.show()
+
+        viewModel.loadGroups()
     }
 
 }

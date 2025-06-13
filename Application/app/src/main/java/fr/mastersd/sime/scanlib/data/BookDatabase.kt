@@ -30,7 +30,7 @@ abstract class BookDatabase : RoomDatabase() {
      */
     abstract fun bookDao(): BookDao
 
-    abstract fun favoriteGroupDao(): FavoriteGroupDao
+    abstract fun favoriteGroupDao(): GroupBookDao
 
     companion object {
         @Volatile

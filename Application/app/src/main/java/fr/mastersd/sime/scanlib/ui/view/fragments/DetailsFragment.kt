@@ -22,6 +22,9 @@ import androidx.core.view.isEmpty
 import androidx.fragment.app.viewModels
 import fr.mastersd.sime.scanlib.ui.viewmodel.DetailsViewModel
 import fr.mastersd.sime.scanlib.data.Book
+import fr.mastersd.sime.scanlib.data.FavoriteGroup
+import androidx.appcompat.app.AlertDialog
+
 
 @AndroidEntryPoint
 class DetailsFragment : Fragment() {
@@ -31,6 +34,12 @@ class DetailsFragment : Fragment() {
     private lateinit var originalBook: Book
     private lateinit var editTexts: List<EditText>
     private var isEditMode = false
+    //=============================================================
+    private var currentGroups: List<FavoriteGroup> = emptyList()
+    private var currentBookGroupIds: List<Long> = emptyList()
+    private var waitingForGroups = false
+    private var waitingForBookGroups = false
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -143,38 +152,63 @@ class DetailsFragment : Fragment() {
         binding.saveButton.visibility = View.GONE
 
 //================================================================================
+        detailsViewModel.groups.observe(viewLifecycleOwner) { groups ->
+            currentGroups = groups
+            if (waitingForGroups && waitingForBookGroups) {
+                showGroupSelectionDialog()
+                waitingForGroups = false
+                waitingForBookGroups = false
+            }
+        }
+        detailsViewModel.bookGroupIds.observe(viewLifecycleOwner) { groupIds ->
+            currentBookGroupIds = groupIds
+            if (waitingForGroups && waitingForBookGroups) {
+                showGroupSelectionDialog()
+                waitingForGroups = false
+                waitingForBookGroups = false
+            }
+        }
+
         // Charger les groupes
         detailsViewModel.loadGroups()
 
         // Configurer le bouton "Ajouter aux groupes"
         binding.addToGroupsButton.setOnClickListener {
-            val groups = detailsViewModel.groups.value.orEmpty()
-
-            if (groups.isEmpty()) {
-                Toast.makeText(requireContext(), "Aucun groupe disponible", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val groupNames = groups.map { it.name }.toTypedArray()
-            val checkedItems = BooleanArray(groups.size) { false }
-
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Ajouter à un ou plusieurs groupes")
-                .setMultiChoiceItems(groupNames, checkedItems) { _, which, isChecked ->
-                    checkedItems[which] = isChecked
-                }
-                .setPositiveButton("Ajouter") { _, _ ->
-                    groups.forEachIndexed { index, group ->
-                        if (checkedItems[index]) {
-                            detailsViewModel.addBookToGroup(originalBook.id, group.id)
-                        }
-                    }
-                    Toast.makeText(requireContext(), "Livre ajouté aux groupes sélectionnés", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("Annuler", null)
-                .show()
+            waitingForGroups = true
+            waitingForBookGroups = true
+            detailsViewModel.loadGroups()
+            detailsViewModel.loadBookGroupIds(originalBook.id)
         }
     }
+
+    private fun showGroupSelectionDialog() {
+        val groups = currentGroups
+        val groupIds = currentBookGroupIds
+
+        val groupNames = groups.map { it.name }.toTypedArray()
+        val checkedItems = groups.map { group -> groupIds.contains(group.id) }.toBooleanArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Gérer l'appartenance aux groupes")
+            .setMultiChoiceItems(groupNames, checkedItems) { _, which, isChecked ->
+                checkedItems[which] = isChecked
+            }
+            .setPositiveButton("Valider") { _, _ ->
+                groups.forEachIndexed { index, group ->
+                    val wasInGroup = groupIds.contains(group.id)
+                    val nowInGroup = checkedItems[index]
+                    when {
+                        !wasInGroup && nowInGroup -> detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                        wasInGroup && !nowInGroup -> detailsViewModel.removeBookFromGroup(originalBook.id, group.id)
+                    }
+                }
+                Toast.makeText(requireContext(), "Mise à jour des groupes effectuée", Toast.LENGTH_SHORT).show()
+                detailsViewModel.loadBookGroupIds(originalBook.id)
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
 //=======================================================================
 
     private fun setEditMode(enabled: Boolean) {
@@ -217,6 +251,7 @@ class DetailsFragment : Fragment() {
         binding.saveButton.visibility =
             if (currentBook != originalBook) View.VISIBLE else View.GONE
     }
+
 
 
 
