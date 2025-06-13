@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -39,6 +41,8 @@ class HomeFragment : Fragment() {
     private var currentGroups: List<FavoriteGroup> = emptyList()
     private var groupManageAdapter: GroupManageAdapter? = null
     private var groupDialog: BottomSheetDialog? = null
+    private lateinit var galleryLauncher: ActivityResultLauncher<String>
+
 
 
     override fun onCreateView(
@@ -52,6 +56,17 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
+                val imagePath = uri.toString()
+                val action = HomeFragmentDirections.actionHomeFragmentToProcessingFragment(imagePath)
+                findNavController().navigate(action)
+            } else {
+                toast("Aucune image sélectionnée")
+            }
+        }
+
+
         setupAdapter()
         setupObservers()
         setupListeners()
@@ -152,11 +167,7 @@ class HomeFragment : Fragment() {
         }
         sheetView.findViewById<MaterialButton>(R.id.option_import)?.setOnClickListener {
             dialog.dismiss()
-            toast("À implémenter...")
-            /*
-           galleryLauncher.launch("image/*")
-           */
-            */
+            galleryLauncher.launch("image/*")
         }
     }
 
