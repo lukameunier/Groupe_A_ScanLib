@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primary_background">
@@ -21,17 +22,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ProgressBar -->
+    <!-- Barre de progression -->
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/headerTitle"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="12dp"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Image originale description -->
+    <!-- Description image originale -->
     <TextView
         android:id="@+id/imageOriginalDesc"
         android:layout_width="wrap_content"
@@ -46,7 +47,7 @@
         app:layout_constraintStart_toStartOf="@id/imageOriginal"
         app:layout_constraintEnd_toEndOf="@id/imageOriginal"/>
 
-    <!-- Image avec boîtes description -->
+    <!-- Description image avec boîtes -->
     <TextView
         android:id="@+id/imageWithBoxesDesc"
         android:layout_width="wrap_content"
@@ -61,20 +62,21 @@
         app:layout_constraintStart_toStartOf="@id/imageWithBoxes"
         app:layout_constraintEnd_toEndOf="@id/imageWithBoxes"/>
 
-    <!-- Image Originale -->
+    <!-- Image originale -->
     <ImageView
         android:id="@+id/imageOriginal"
         android:layout_width="100dp"
         android:layout_height="150dp"
-        android:contentDescription="@string/imageview_original"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:contentDescription="@string/imageview_original"
         app:layout_constraintTop_toBottomOf="@id/imageOriginalDesc"
         app:layout_constraintStart_toStartOf="@id/headerTitle"
         app:layout_constraintEnd_toStartOf="@id/imageWithBoxes"
         app:layout_constraintDimensionRatio="16:9"
         app:layout_constraintHeight_percent="0.25" />
 
+    <!-- Flèche entre les deux images -->
     <ImageView
         android:id="@+id/imagesArrow"
         android:layout_width="50dp"
@@ -87,61 +89,69 @@
         app:layout_constraintBottom_toBottomOf="@id/imageOriginal"
         app:tint="@color/secondary_background" />
 
-    <!-- Image avec Boîtes -->
+    <!-- Image annotée -->
     <ImageView
         android:id="@+id/imageWithBoxes"
         android:layout_width="100dp"
         android:layout_height="150dp"
-        android:contentDescription="@string/imageview_with_boxes"
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
+        android:contentDescription="@string/imageview_with_boxes"
         app:layout_constraintTop_toBottomOf="@id/imageOriginalDesc"
         app:layout_constraintStart_toEndOf="@id/imageOriginal"
         app:layout_constraintEnd_toEndOf="@id/headerTitle"
         app:layout_constraintDimensionRatio="16:9"
         app:layout_constraintHeight_percent="0.25"/>
 
-    <!-- Texte Nombre de livres -->
+    <!-- Nombre de livres détectés -->
     <TextView
         android:id="@+id/textBookCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nombres de livres détéctés :"
+        android:layout_marginTop="16dp"
+        android:text="@string/nb_livres_dectes"
         android:textStyle="bold"
         android:textSize="16sp"
         android:textColor="@color/secondary_background"
         app:layout_constraintTop_toBottomOf="@id/imageOriginal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Résultats OCR -->
-    <TextView
-        android:id="@+id/textOcrResults"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+    <!-- Résultats OCR scrollables -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/ocrScrollView"
+        android:layout_width="319dp"
+        android:layout_height="309dp"
         android:layout_marginTop="24dp"
-        android:text="Résultats OCR..."
-        android:textColor="@color/secondary_background"
-        app:layout_constraintStart_toStartOf="@id/imageOriginal"
+        android:fillViewport="true"
         app:layout_constraintEnd_toEndOf="@id/imageWithBoxes"
-        app:layout_constraintTop_toBottomOf="@id/textBookCount" />
+        app:layout_constraintStart_toStartOf="@id/imageOriginal"
+        app:layout_constraintTop_toBottomOf="@id/textBookCount">
 
-    <!-- Bouton Continuer -->
+        <TextView
+            android:id="@+id/textOcrResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="@string/resultat_ocr"
+            android:textColor="@color/secondary_background"
+            android:textSize="14sp" />
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bouton pour continuer -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnContinue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Voir les livres"
+        android:layout_marginTop="24dp"
+        android:text="@string/voir_les_livres"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/textOcrResults"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:textColor="@color/secondary_text"
         app:backgroundTint="@color/primary_button"
-        android:layout_marginTop="24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         style="@style/Widget.MaterialComponents.Button"
-        />
+        app:layout_constraintTop_toBottomOf="@id/ocrScrollView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

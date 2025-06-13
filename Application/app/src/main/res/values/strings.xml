@@ -61,4 +61,7 @@
     <string name="images_with_boxes_desc">Texte qui spécifie l\'image avec boîtes</string>
     <string name="imageview_original">Image originale</string>
     <string name="imageview_with_boxes">Image annotée</string>
+    <string name="resultat_ocr">Résultats OCR...</string>
+    <string name="voir_les_livres">Voir les livres</string>
+    <string name="nb_livres_dectes">Nombre de livres détectés :</string>
 </resources>
