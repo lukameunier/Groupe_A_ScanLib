@@ -47,7 +47,12 @@
     <string name="filtrer_par_score_popup">Filtrer par score</string>
     <string name="filtrer_par_ann_e_popup">Filtrer par année</string>
     <string name="derniers_abouts_popup">Derniers ajouts</string>
-    <string name="derniers_abouts_popup">Derniers abouts</string>
+    <string name="ajouter_aux_groupes">Ajouter à un groupe</string>
+    <string name="nom_du_groupe">Nom du groupe</string>
+    <string name="edit_group">Edit group</string>
+    <string name="delete_group">Delete group</string>
+    <string name="create_groupe">Créer un groupe</string>
+    <string name="les_groupes">Gérer les groupes</string>
     <string name="image_arrow_desc">Flèche de l\'image originale vers l\'image avec boîtes</string>
     <string name="treatments_title">Traitements</string>
     <string name="image_original_text">Image Originale</string>
