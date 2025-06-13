@@ -40,18 +40,37 @@ class ProcessingFragment : Fragment() {
         val args = ProcessingFragmentArgs.fromBundle(requireArguments())
         val imagePath = args.imagePath
 
-        // Affiche l'image brute dans l'UI
-        val bmp = BitmapFactory.decodeFile(imagePath)
+        val bmp = if (imagePath?.startsWith("content://") == true) {
+            try {
+                val uri = android.net.Uri.parse(imagePath)
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
+                BitmapFactory.decodeStream(inputStream)
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            BitmapFactory.decodeFile(imagePath)
+        }
+
         if (bmp != null) {
             binding.imageOriginal.setImageBitmap(bmp)
             binding.progressBar.visibility = View.VISIBLE
-            scanViewModel.processImage(imagePath) // Démarre le traitement (OCR + détection)
+
+            // Convertir l’image en fichier temporaire si elle vient d’un URI content://
+            val realPath = if (imagePath?.startsWith("content://") == true) {
+                val tempFile = java.io.File.createTempFile("temp_imported", ".jpg", requireContext().cacheDir)
+                requireContext().contentResolver.openInputStream(android.net.Uri.parse(imagePath))?.use { input ->
+                    tempFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                tempFile.absolutePath
+            } else imagePath
+
+            scanViewModel.processImage(realPath ?: return)
         } else {
-            Toast.makeText(requireContext(), "Impossible de lire l'image.", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(requireContext(), "Impossible de lire l'image.", Toast.LENGTH_SHORT).show()
             findNavController().navigateUp()
-            return
         }
+
 
         // Observe le résultat du traitement (image annotée)
         scanViewModel.processedImage.observe(viewLifecycleOwner) { annotated ->
