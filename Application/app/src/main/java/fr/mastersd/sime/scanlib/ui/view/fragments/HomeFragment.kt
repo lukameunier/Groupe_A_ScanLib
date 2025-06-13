@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -56,6 +57,7 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 val imagePath = uri.toString()
@@ -116,12 +118,19 @@ class HomeFragment : Fragment() {
         }
 
         // Exit mode sélection par clic sur le fond
-        rootLayout.setOnClickListener {
-            if (adapter.selectionMode) {
-                adapter.exitSelectionMode()
-                updateActionButtons()
+        binding.bookRecyclerView.setOnTouchListener { v, event ->
+            if (adapter.selectionMode && event.action == MotionEvent.ACTION_DOWN) {
+                val child = binding.bookRecyclerView.findChildViewUnder(event.x, event.y)
+                if (child == null) {
+                    adapter.exitSelectionMode()
+                    updateActionButtons()
+                    v.performClick()
+                    return@setOnTouchListener true // On consomme l'événement
+                }
             }
+            false
         }
+
 
         // Ajout livre (BottomSheet)
         addBookButton.setOnClickListener { showAddBookSheet() }

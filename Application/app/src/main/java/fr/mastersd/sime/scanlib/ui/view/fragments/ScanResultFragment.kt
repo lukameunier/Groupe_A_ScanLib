@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.databinding.FragmentScanResultBinding
 import fr.mastersd.sime.scanlib.ui.adapter.ScanResultAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
@@ -24,6 +25,8 @@ class ScanResultFragment : Fragment() {
     private lateinit var adapter: ScanResultAdapter
     private val args: ScanResultFragmentArgs by navArgs()
     private val bookViewModel: BookViewModel by viewModels()
+
+    private val selectedBooks = mutableSetOf<Book>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,28 +51,36 @@ class ScanResultFragment : Fragment() {
         adapter = ScanResultAdapter { selectedBook ->
             val action = ScanResultFragmentDirections
                 .actionScanResultFragmentToDetailsFragment(selectedBook)
+            selectedBooks.clear()
+            selectedBooks.addAll(adapter.getSelectedBooks())
             findNavController().navigate(action)
+        }.apply {
+            setSelectedBooks(selectedBooks)
+            onSelectionChanged = { newSelection ->
+                selectedBooks.clear()
+                selectedBooks.addAll(newSelection)
+            }
         }
 
         binding.bookRecyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
         binding.bookRecyclerView.adapter = adapter
 
         adapter.submitList(args.foundBooks.toList())
+        adapter.setSelectedBooks(selectedBooks)
 
-        // Bouton enregistrer uniquement les livres cochés
         binding.saveButton.setOnClickListener {
             val action = ScanResultFragmentDirections
                 .actionScanResultFragmentToHomeFragment()
-            val selectedBooks = adapter.getSelectedBooks()
-            if (selectedBooks.isEmpty()) {
+            val selected = adapter.getSelectedBooks()
+            if (selected.isEmpty()) {
                 Toast.makeText(requireContext(), "Aucun livre sélectionné", Toast.LENGTH_SHORT).show()
             } else {
-                selectedBooks.forEach { book ->
+                selected.forEach { book ->
                     bookViewModel.insertBook(book)
                 }
-                Toast.makeText(requireContext(), "${selectedBooks.size} livre(s) enregistré(s)", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(action)
+                Toast.makeText(requireContext(), "${selected.size} livre(s) enregistré(s)", Toast.LENGTH_SHORT).show()
             }
+            findNavController().navigate(action)
         }
     }
 }

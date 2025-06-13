@@ -13,11 +13,25 @@ class ScanResultAdapter(
 
     private val selectedBooks = mutableSetOf<Book>()
     private var bookList: List<Book> = emptyList()
+    var onSelectionChanged: ((Set<Book>) -> Unit)? = null
 
     fun submitList(list: List<Book>) {
         bookList = list
         notifyDataSetChanged()
     }
+
+    fun setSelectedBooks(books: Set<Book>) {
+        selectedBooks.clear()
+        selectedBooks.addAll(books)
+        notifyDataSetChanged()
+    }
+
+    fun toggleBookSelection(book: Book) {
+        if (selectedBooks.contains(book)) selectedBooks.remove(book) else selectedBooks.add(book)
+        notifyDataSetChanged()
+        onSelectionChanged?.invoke(selectedBooks)
+    }
+
 
     fun getSelectedBooks(): List<Book> = selectedBooks.toList()
 

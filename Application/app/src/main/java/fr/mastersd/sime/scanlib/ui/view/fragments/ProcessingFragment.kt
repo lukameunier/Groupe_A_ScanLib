@@ -54,7 +54,6 @@ class ProcessingFragment : Fragment() {
 
         if (bmp != null) {
             binding.imageOriginal.setImageBitmap(bmp)
-            binding.progressBar.visibility = View.VISIBLE
 
             // Convertir l’image en fichier temporaire si elle vient d’un URI content://
             val realPath = if (imagePath?.startsWith("content://") == true) {
@@ -80,7 +79,6 @@ class ProcessingFragment : Fragment() {
         // Observe le résultat OCR, affiche la progression et les résultats
         scanViewModel.ocrTexts.observe(viewLifecycleOwner) { texts ->
             val nonEmptyTexts = texts.filter { it.isNotBlank() }
-            binding.progressBar.visibility = View.GONE
 
             binding.textBookCount.text = "Nombre de livres détectés : ${nonEmptyTexts.size}"
             binding.textOcrResults.text = nonEmptyTexts.joinToString("\n") { "• $it" }
@@ -90,14 +88,12 @@ class ProcessingFragment : Fragment() {
             // Active le bouton continuer seulement s'il y a des textes
             binding.btnContinue.setOnClickListener {
                 binding.btnContinue.isEnabled = false
-                binding.progressBar.visibility = View.VISIBLE
                 bookViewModel.syncBooksFromValTexts(nonEmptyTexts)
             }
         }
 
         // Observe le résultat de la synchronisation Google Books
         bookViewModel.syncResult.observe(viewLifecycleOwner) { result ->
-            binding.progressBar.visibility = View.GONE
             binding.btnContinue.isEnabled = true
             if (result.foundBooks.isNotEmpty()) {
                 val action = ProcessingFragmentDirections
