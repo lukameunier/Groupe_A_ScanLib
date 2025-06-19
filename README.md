@@ -42,8 +42,12 @@ Groupe_A_ScanLib/
 - Jetpack (CameraX, ViewModel, LiveData, Hilt)
 
 ## Captures d’écran (application)
-
-*À insérer : home_before_example.jpg, scan_example.jpg, etc.*
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/237e8cf4-b4cc-430e-bc2a-93c87f4c2bb8" width="200"/>
+  <img src="https://github.com/user-attachments/assets/7baf3950-022d-47d9-997c-ae3ddc877010" width="200"/>
+  <img src="https://github.com/user-attachments/assets/076ab79b-23e3-471d-b1bb-81ec29d3d442" width="200"/>
+  <img src="https://github.com/user-attachments/assets/cb79443d-2e92-45ef-a179-1900489a284a" width="200"/>
+</p>
 
 ## À venir / pistes d’amélioration
 
