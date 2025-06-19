@@ -49,6 +49,37 @@ Groupe_A_ScanLib/
   <img src="https://github.com/user-attachments/assets/cb79443d-2e92-45ef-a179-1900489a284a" width="200"/>
 </p>
 
+## Installation
+
+### Prérequis
+
+- Android Studio (version recommandée : Hedgehog ou plus récente)
+- SDK Android 33+
+- Appareil physique Android (recommandé) ou émulateur avec caméra virtuelle activée
+- Accès internet pour les requêtes à l’API Google Books
+
+### Étapes
+
+1. **Cloner le dépôt**
+   ```bash
+   git clone https://github.com/lukameunier/Groupe_A_ScanLib.git
+#### 1.Ouvrir le projet dans Android Studio
+Sélectionner le dossier Application/ comme racine du projet.
+
+#### 2.Lancer une build
+Android Studio détectera automatiquement les dépendances (Hilt, MLKit, CameraX...) et les installera via Gradle.
+
+#### 3.Exécuter l’application
+Connecter un appareil Android ou configurer un émulateur, puis lancer l'application principale ScanLibApp.
+
+#### 4.Permissions
+Lors du premier lancement, accepter les permissions de caméra et de stockage si demandées.
+
+#### 5.Remarques
+Le modèle TensorFlow Lite (best-v1.tflite) est déjà intégré dans les assets de l’application.
+Une connexion Internet est nécessaire pour récupérer les métadonnées depuis l’API Google Books.
+
+
 ## À venir / pistes d’amélioration
 
 - Traitement en temps réel sur flux caméra
