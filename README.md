@@ -62,9 +62,10 @@ Le rapport de projet est disponible en PDF (structure académique : introduction
 
 ## Auteurs
 
-- Luka MEUNIER — Interface utilisateur, base Room, navigation
-- Flora BENANE — Étude de l’existant, conception, validation
-- Andrianina ANDRIANTSIALONINA — YOLOv8, OCR, traitement d’image
+- Luka MEUNIER — Interface utilisateur, navigation entre les écrans, ergonomie générale de l’application.
+- Flora BENANE — Base de données Room, gestion des groupes de livres, filtres et tri, étude de l’existant.
+- Andrianina ANDRIANTSIALONINA — Détection YOLOv8, OCR avec MLKit, traitement d’image, intégration Android, UI.
+
 
 ## Licence
 
