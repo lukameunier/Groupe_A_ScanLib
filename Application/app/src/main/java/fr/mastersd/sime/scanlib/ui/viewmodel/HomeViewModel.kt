@@ -1,7 +1,5 @@
 package fr.mastersd.sime.scanlib.ui.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,6 +7,9 @@ import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
 import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import fr.mastersd.sime.scanlib.data.FilterState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,70 +18,59 @@ class HomeViewModel @Inject constructor(
     private val bookRepository: BookRepository
 ) : ViewModel() {
 
-    // Donnée privée modifiable
-    private val _books = MutableLiveData<List<Book>>()
+    private val _books = MutableStateFlow<List<Book>>(emptyList())
+    val books: StateFlow<List<Book>> = _books.asStateFlow()
 
-    // Donnée publique observable (pour le Fragment)
-    val books: LiveData<List<Book>> get() = _books
+    private val _genres = MutableStateFlow<List<String>>(emptyList())
+    val genres: StateFlow<List<String>> = _genres.asStateFlow()
 
-    private val _genres = MutableLiveData<List<String>>()
-    val genres: LiveData<List<String>> get() = _genres
+    private val _years = MutableStateFlow<List<String>>(emptyList())
+    val years: StateFlow<List<String>> = _years.asStateFlow()
 
-    private val _years = MutableLiveData<List<String>>()
-    val years: LiveData<List<String>> get() = _years
+    private val _scores = MutableStateFlow<List<Double>>(emptyList())
+    val scores: StateFlow<List<Double>> = _scores.asStateFlow()
 
-    private val _scores = MutableLiveData<List<Double>>()
-    val scores: LiveData<List<Double>> get() = _scores
+    private val _filters = MutableStateFlow(FilterState())
+    val filters: StateFlow<FilterState> = _filters.asStateFlow()
 
-    // État actuel des filtres (observable)
-    private val _filters = MutableLiveData(FilterState())
-    val filters: LiveData<FilterState> get() = _filters
+    private val _groups = MutableStateFlow<List<FavoriteGroup>>(emptyList())
+    val groups: StateFlow<List<FavoriteGroup>> = _groups.asStateFlow()
 
-    // Chargement des livres au lancement du ViewModel
+    private val _currentGroupName = MutableStateFlow("Tous")
+    val currentGroupName: StateFlow<String> = _currentGroupName.asStateFlow()
+
     init {
         loadBooks()
     }
 
-    // Fonction pour charger (ou recharger) la liste des livres
     fun loadBooks() {
         viewModelScope.launch {
-            val list = bookRepository.getAllBooks()
-            _books.postValue(list)
-            _currentGroupName.postValue("Tous")
+            _books.value = bookRepository.getAllBooks()
+            _currentGroupName.value = "Tous"
         }
     }
 
-    /**
-     * Chargement des genres disponibles (à afficher dans les filtres)
-     */
     fun loadGenres() {
         viewModelScope.launch {
-            val list = bookRepository.getAllGenres()
-            _genres.postValue(list)
+            _genres.value = bookRepository.getAllGenres()
         }
     }
 
     fun loadYears() {
         viewModelScope.launch {
-            val list = bookRepository.getAllYears()
-            _years.postValue(list)
+            _years.value = bookRepository.getAllYears()
         }
     }
 
     fun loadScores() {
         viewModelScope.launch {
-            val list = bookRepository.getAllScores()
-            _scores.postValue(list)
+            _scores.value = bookRepository.getAllScores()
         }
     }
 
-    /**
-     * Recherche par mot-clé (titre ou auteur)
-     */
     fun searchByKeyword(keyword: String) {
         viewModelScope.launch {
-            val result = bookRepository.getBooksByKeyword(keyword)
-            _books.postValue(result)
+            _books.value = bookRepository.getBooksByKeyword(keyword)
         }
     }
 
@@ -91,26 +81,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Mise à jour des filtres à partir du fragment
-     */
     fun updateFilter(newFilter: FilterState) {
         _filters.value = newFilter
     }
 
-    /**
-     * Réinitialisation de tous les filtres
-     */
     fun resetFilters() {
         _filters.value = FilterState()
     }
 
-    /**
-     * Filtrage combiné par genre + score + année
-     *
-     * Appliquer les filtres combinés à partir du FilterState
-     */
-     fun applyCombinedFilters(filters: FilterState) {
+    fun applyCombinedFilters(filters: FilterState) {
         viewModelScope.launch {
             val books = bookRepository.getAllBooks()
 
@@ -133,59 +112,42 @@ class HomeViewModel @Inject constructor(
                 categoryMatch && scoreMatch && yearMatch
             }
 
-            val finalResult = if (filters.sortByDateAjout)
+            _books.value = if (filters.sortByDateAjout)
                 filtered.sortedByDescending { it.dateAjout }
             else
                 filtered
-
-            _books.postValue(finalResult)
         }
     }
 
-//=================================================================
-    private val _groups = MutableLiveData<List<FavoriteGroup>>()
-    val groups: LiveData<List<FavoriteGroup>> get() = _groups
-
-    private val _currentGroupName = MutableLiveData<String>("Tous") // par défaut "Tous"
-    val currentGroupName: LiveData<String> get() = _currentGroupName
-
-
     fun loadGroups() {
         viewModelScope.launch {
-            val list = bookRepository.getAllFavoriteGroups()
-            _groups.postValue(list)
+            _groups.value = bookRepository.getAllFavoriteGroups()
         }
     }
 
     fun filterByGroup(groupId: Long) {
         viewModelScope.launch {
-            val books = bookRepository.getBooksByGroup(groupId)
-            _books.postValue(books)
-            // On cherche le nom du groupe sélectionné
-            val group = _groups.value?.find { it.id == groupId }
-            if (group != null) {
-                _currentGroupName.postValue(group.name)
-            }
+            _books.value = bookRepository.getBooksByGroup(groupId)
+            val group = _groups.value.find { it.id == groupId }
+            if (group != null) _currentGroupName.value = group.name
         }
     }
 
     fun addGroupLocally(group: FavoriteGroup) {
-        val groupsNow = _groups.value?.toMutableList() ?: mutableListOf()
-        if (groupsNow.none { it.id == group.id }) {
-            groupsNow.add(group)
-            _groups.value = groupsNow
+        val current = _groups.value.toMutableList()
+        if (current.none { it.id == group.id }) {
+            current.add(group)
+            _groups.value = current
         }
     }
 
-    // Supprimer un groupe
     fun deleteGroup(groupId: Long) {
         viewModelScope.launch {
             bookRepository.deleteGroup(groupId)
-            loadGroups() // recharge la liste
+            loadGroups()
         }
     }
 
-    // Renommer un groupe
     fun renameGroup(groupId: Long, newName: String) {
         viewModelScope.launch {
             bookRepository.renameGroup(groupId, newName)
@@ -204,6 +166,4 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
-
 }

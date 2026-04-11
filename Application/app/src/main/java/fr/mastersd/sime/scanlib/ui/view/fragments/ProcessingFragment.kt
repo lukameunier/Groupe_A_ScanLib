@@ -8,11 +8,15 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentProcessingBinding
 import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ProcessingFragment : Fragment() {
@@ -71,36 +75,44 @@ class ProcessingFragment : Fragment() {
         }
 
 
-        // Observe le résultat du traitement (image annotée)
-        scanViewModel.processedImage.observe(viewLifecycleOwner) { annotated ->
-            binding.imageWithBoxes.setImageBitmap(annotated)
-        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observe le résultat du traitement (image annotée)
+                launch {
+                    scanViewModel.processedImage.collect { annotated ->
+                        if (annotated != null) binding.imageWithBoxes.setImageBitmap(annotated)
+                    }
+                }
 
-        // Observe le résultat OCR, affiche la progression et les résultats
-        scanViewModel.ocrTexts.observe(viewLifecycleOwner) { texts ->
-            val nonEmptyTexts = texts.filter { it.isNotBlank() }
+                // Observe le résultat OCR
+                launch {
+                    scanViewModel.ocrTexts.collect { texts ->
+                        val nonEmptyTexts = texts.filter { it.isNotBlank() }
+                        binding.textBookCount.text = "Nombre de livres détectés : ${nonEmptyTexts.size}"
+                        binding.textOcrResults.text = nonEmptyTexts.joinToString("\n") { "• $it" }
+                        binding.btnContinue.visibility =
+                            if (nonEmptyTexts.isNotEmpty()) View.VISIBLE else View.GONE
+                        binding.btnContinue.setOnClickListener {
+                            binding.btnContinue.isEnabled = false
+                            bookViewModel.syncBooksFromValTexts(nonEmptyTexts)
+                        }
+                    }
+                }
 
-            binding.textBookCount.text = "Nombre de livres détectés : ${nonEmptyTexts.size}"
-            binding.textOcrResults.text = nonEmptyTexts.joinToString("\n") { "• $it" }
-            binding.btnContinue.visibility =
-                if (nonEmptyTexts.isNotEmpty()) View.VISIBLE else View.GONE
-
-            // Active le bouton continuer seulement s'il y a des textes
-            binding.btnContinue.setOnClickListener {
-                binding.btnContinue.isEnabled = false
-                bookViewModel.syncBooksFromValTexts(nonEmptyTexts)
-            }
-        }
-
-        // Observe le résultat de la synchronisation Google Books
-        bookViewModel.syncResult.observe(viewLifecycleOwner) { result ->
-            binding.btnContinue.isEnabled = true
-            if (result.foundBooks.isNotEmpty()) {
-                val action = ProcessingFragmentDirections
-                    .actionProcessingFragmentToScanResultFragment(result.foundBooks.toTypedArray())
-                findNavController().navigate(action)
-            } else {
-                Toast.makeText(requireContext(), "Aucun livre trouvé !", Toast.LENGTH_SHORT).show()
+                // Observe le résultat de la synchronisation Google Books
+                launch {
+                    bookViewModel.syncResult.collect { result ->
+                        if (result == null) return@collect
+                        binding.btnContinue.isEnabled = true
+                        if (result.foundBooks.isNotEmpty()) {
+                            val action = ProcessingFragmentDirections
+                                .actionProcessingFragmentToScanResultFragment(result.foundBooks.toTypedArray())
+                            findNavController().navigate(action)
+                        } else {
+                            Toast.makeText(requireContext(), "Aucun livre trouvé !", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
         }
     }

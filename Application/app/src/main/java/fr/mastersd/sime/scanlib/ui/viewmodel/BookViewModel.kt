@@ -5,9 +5,19 @@ import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.mastersd.sime.scanlib.data.*
+import fr.mastersd.sime.scanlib.data.Book
+import fr.mastersd.sime.scanlib.data.BookDatabase
+import fr.mastersd.sime.scanlib.data.BookRepository
+import fr.mastersd.sime.scanlib.data.BookSyncResult
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -19,38 +29,27 @@ class BookViewModel @Inject constructor(
 
     private var imageCapture: ImageCapture? = null
 
-    // Contient le chemin de la dernière image capturée
-    private val _lastImagePath = MutableLiveData<String?>()
-    val lastImagePath: LiveData<String?> get() = _lastImagePath
+    // Événement one-shot : chemin de l'image capturée → navigation vers ProcessingScreen
+    private val _lastImagePath = MutableSharedFlow<String>(replay = 0)
+    val lastImagePath: SharedFlow<String> = _lastImagePath.asSharedFlow()
 
-    // Résultat du processus de synchronisation avec Google Books API
-    private val _syncResult = MutableLiveData<BookSyncResult>()
-    val syncResult: LiveData<BookSyncResult> get() = _syncResult
+    private val _syncResult = MutableStateFlow<BookSyncResult?>(null)
+    val syncResult: StateFlow<BookSyncResult?> = _syncResult.asStateFlow()
 
-    // Liste des livres récupérés depuis la base de données locale (Room)
-    private val _booksFromDb = MutableLiveData<List<Book>>()
-    val booksFromDb: LiveData<List<Book>> get() = _booksFromDb
+    private val _booksFromDb = MutableStateFlow<List<Book>>(emptyList())
+    val booksFromDb: StateFlow<List<Book>> = _booksFromDb.asStateFlow()
 
-    // Liste complète des livres chargée via une autre méthode
-    private val _allBooks = MutableLiveData<List<Book>>()
-    val allBooks: LiveData<List<Book>> get() = _allBooks
+    private val _allBooks = MutableStateFlow<List<Book>>(emptyList())
+    val allBooks: StateFlow<List<Book>> = _allBooks.asStateFlow()
 
-    fun clearLastImagePath() {
-        _lastImagePath.value = null
+    fun clearSyncResult() {
+        _syncResult.value = null
     }
 
-
-    /**
-     * Enregistre une instance d'ImageCapture (CameraX) pour effectuer les captures plus tard.
-     */
     fun setImageCapture(capture: ImageCapture) {
         imageCapture = capture
     }
 
-    /**
-     * Capture une image à l’aide de CameraX et sauvegarde le fichier dans un répertoire temporaire.
-     * Si la capture réussit, le chemin est publié dans le LiveData lastImagePath.
-     */
     fun captureImage(context: Context) {
         val captureDir = File(context.cacheDir, "captures").apply { mkdirs() }
         val photoFile = File(captureDir, "${System.currentTimeMillis()}.jpg")
@@ -61,7 +60,9 @@ class BookViewModel @Inject constructor(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    _lastImagePath.postValue(photoFile.absolutePath)
+                    viewModelScope.launch {
+                        _lastImagePath.emit(photoFile.absolutePath)
+                    }
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -71,43 +72,25 @@ class BookViewModel @Inject constructor(
         )
     }
 
-    /**
-     * Récupère tous les livres de la base de données locale Room et les publie via booksFromDb.
-     */
     fun fetchBooksFromDb(context: Context) {
         viewModelScope.launch {
             val db = BookDatabase.getDatabase(context)
-            val books = db.bookDao().getAllBooks()
-            _booksFromDb.postValue(books)
+            _booksFromDb.value = db.bookDao().getAllBooks()
         }
     }
 
-    /**
-     * Lance une requête vers Google Books API pour récupérer les informations associées
-     * aux textes détectés (issus de l’OCR). Le résultat est publié dans syncResult.
-     */
     fun syncBooksFromValTexts(texts: List<String>) {
         viewModelScope.launch {
-            val result = bookRepository.syncBooksFromValTexts(texts)
-            _syncResult.postValue(result)
+            _syncResult.value = bookRepository.syncBooksFromValTexts(texts)
         }
     }
 
-    /**
-     * Charge tous les livres depuis la base de données en utilisant le repository.
-     * Les livres sont publiés dans allBooks.
-     */
     fun loadBooksFromDb() {
         viewModelScope.launch {
-            val books = bookRepository.getAllBooks()
-            _allBooks.postValue(books)
+            _allBooks.value = bookRepository.getAllBooks()
         }
     }
 
-    /**
-     * Insère un livre dans la base de données locale.
-     * À utiliser uniquement après sélection manuelle par l'utilisateur.
-     */
     fun insertBook(book: Book) {
         viewModelScope.launch {
             bookRepository.insertBook(book)

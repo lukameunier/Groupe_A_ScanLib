@@ -21,17 +21,19 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentDetailsBinding
 import androidx.core.view.isEmpty
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import fr.mastersd.sime.scanlib.ui.viewmodel.DetailsViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.FavoriteGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import fr.mastersd.sime.scanlib.ui.adapter.BookGroupSelectAdapter
+import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
@@ -42,8 +44,6 @@ class DetailsFragment : Fragment() {
     private lateinit var originalBook: Book
     private lateinit var editTexts: List<EditText>
     private var isEditMode = false
-    //=============================================================
-    private var suppressNextGroupObserverUpdate = false
 
 
     override fun onCreateView(
@@ -161,43 +161,27 @@ class DetailsFragment : Fragment() {
         // === GESTION DES GROUPES ===
 
         binding.addToGroupsButton.setOnClickListener {
-            detailsViewModel.loadGroups()
-            detailsViewModel.loadBookGroupIds(originalBook.id)
-            observeOnce(detailsViewModel.groups) { loadedGroups ->
-                observeOnce(detailsViewModel.bookGroupIds) { groupIds ->
-                    when {
-                        loadedGroups == null -> {
-                            Toast.makeText(requireContext(), "Chargement des groupes...", Toast.LENGTH_SHORT).show()
-                        }
-                        loadedGroups.isEmpty() -> {
-                            showCreateGroupDialog { group ->
-                                detailsViewModel.addBookToGroup(originalBook.id, group.id)
-                                detailsViewModel.loadGroups()
-                                detailsViewModel.loadBookGroupIds(originalBook.id)
-                                observeOnce(detailsViewModel.groups) { updatedGroups ->
-                                    observeOnce(detailsViewModel.bookGroupIds) { updatedIds ->
-                                        showGroupSelectionSheet(updatedGroups ?: emptyList(), updatedIds)
-                                    }
-                                }
-                            }
-                        }
-                        else -> {
-                            showGroupSelectionSheet(loadedGroups, groupIds)
+            viewLifecycleOwner.lifecycleScope.launch {
+                detailsViewModel.loadGroups()
+                detailsViewModel.loadBookGroupIds(originalBook.id)
+                val loadedGroups = detailsViewModel.groups.value
+                val groupIds = detailsViewModel.bookGroupIds.value
+                when {
+                    loadedGroups.isEmpty() -> {
+                        showCreateGroupDialog { group ->
+                            detailsViewModel.addBookToGroup(originalBook.id, group.id)
+                            detailsViewModel.loadGroups()
+                            detailsViewModel.loadBookGroupIds(originalBook.id)
+                            showGroupSelectionSheet(
+                                detailsViewModel.groups.value,
+                                detailsViewModel.bookGroupIds.value
+                            )
                         }
                     }
+                    else -> showGroupSelectionSheet(loadedGroups, groupIds)
                 }
             }
         }
-    }
-
-    private fun <T> observeOnce(liveData: LiveData<T>, onChange: (T) -> Unit) {
-        val observer = object : Observer<T> {
-            override fun onChanged(t: T) {
-                onChange(t)
-                liveData.removeObserver(this)
-            }
-        }
-        liveData.observe(viewLifecycleOwner, observer)
     }
 
     private fun showCreateGroupDialog(onGroupCreated: (FavoriteGroup) -> Unit) {
@@ -240,13 +224,13 @@ class DetailsFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        // Observer pour mettre à jour la sélection après chaque modification
-        detailsViewModel.bookGroupIds.observe(viewLifecycleOwner) { newIds ->
-            if (suppressNextGroupObserverUpdate) {
-                suppressNextGroupObserverUpdate = false
-                return@observe
+        // Observe les ids de groupes pour mettre à jour la sélection
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                detailsViewModel.bookGroupIds.collect { newIds ->
+                    adapter.updateGroups(groups, newIds.toSet())
+                }
             }
-            adapter.updateGroups(groups, newIds.toSet())
         }
 
         createGroupBtn.setOnClickListener {
@@ -256,9 +240,6 @@ class DetailsFragment : Fragment() {
                     displayedGroups.add(group)
                     adapter.updateGroups(displayedGroups, adapter.selectedGroupIds + group.id)
                 }
-                // Bloque l'observer du prochain update pour éviter l'écrasement de l’UI instantanée
-                suppressNextGroupObserverUpdate = true
-
                 detailsViewModel.addBookToGroup(originalBook.id, group.id)
                 detailsViewModel.loadGroups()
                 detailsViewModel.loadBookGroupIds(originalBook.id)

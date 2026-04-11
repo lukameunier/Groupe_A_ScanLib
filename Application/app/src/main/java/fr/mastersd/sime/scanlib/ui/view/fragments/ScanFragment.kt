@@ -16,11 +16,13 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import fr.mastersd.sime.scanlib.databinding.FragmentScanBinding
 import fr.mastersd.sime.scanlib.ui.viewmodel.BookViewModel
 import fr.mastersd.sime.scanlib.ui.viewmodel.ScanViewModel
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ScanFragment : Fragment() {
@@ -50,11 +52,10 @@ class ScanFragment : Fragment() {
 
         checkCameraPermission()
 
-        viewModel.lastImagePath.observe(viewLifecycleOwner) { path ->
-            if (!path.isNullOrBlank()) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.lastImagePath.collect { path ->
                 val action = ScanFragmentDirections.actionScanFragmentToProcessingFragment(path)
                 findNavController().navigate(action)
-                viewModel.clearLastImagePath()
             }
         }
 

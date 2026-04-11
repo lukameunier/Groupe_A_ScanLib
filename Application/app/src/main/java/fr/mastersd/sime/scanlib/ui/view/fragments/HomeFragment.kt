@@ -15,6 +15,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +31,7 @@ import fr.mastersd.sime.scanlib.databinding.FragmentHomeBinding
 import fr.mastersd.sime.scanlib.ui.adapter.BookAdapter
 import fr.mastersd.sime.scanlib.ui.adapter.GroupManageAdapter
 import fr.mastersd.sime.scanlib.ui.viewmodel.HomeViewModel
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -89,20 +93,22 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        homeViewModel.books.observe(viewLifecycleOwner) { adapter.submitList(it) }
-        homeViewModel.genres.observe(viewLifecycleOwner) { genreListCache = it }
-        homeViewModel.years.observe(viewLifecycleOwner) { yearListCache = it.sortedDescending() }
-        homeViewModel.scores.observe(viewLifecycleOwner) { scoreListCache = it }
-        homeViewModel.filters.observe(viewLifecycleOwner) { newFilter ->
-            currentFilter = newFilter
-            homeViewModel.applyCombinedFilters(newFilter)
-            updateFilterDisplay()
-        }
-        homeViewModel.currentGroupName.observe(viewLifecycleOwner) { groupName ->
-            binding.groupButton.text = groupName
-        }
-        homeViewModel.groups.observe(viewLifecycleOwner) { groups ->
-            currentGroups = groups
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { homeViewModel.books.collect { adapter.submitList(it) } }
+                launch { homeViewModel.genres.collect { genreListCache = it } }
+                launch { homeViewModel.years.collect { yearListCache = it.sortedDescending() } }
+                launch { homeViewModel.scores.collect { scoreListCache = it } }
+                launch {
+                    homeViewModel.filters.collect { newFilter ->
+                        currentFilter = newFilter
+                        homeViewModel.applyCombinedFilters(newFilter)
+                        updateFilterDisplay()
+                    }
+                }
+                launch { homeViewModel.currentGroupName.collect { binding.groupButton.text = it } }
+                launch { homeViewModel.groups.collect { currentGroups = it } }
+            }
         }
     }
 
@@ -340,7 +346,7 @@ class HomeFragment : Fragment() {
                 homeViewModel.addGroupLocally(group)
 
                 // Mets à jour l'adapter immédiatement
-                val allGroups = listOf(FavoriteGroup(-1, "Tous")) + (homeViewModel.groups.value ?: emptyList())
+                val allGroups = listOf(FavoriteGroup(-1, "Tous")) + homeViewModel.groups.value
                 groupManageAdapter?.updateGroups(allGroups)
 
                 // Recharge depuis la base après coup pour l'intégrité (Room)
@@ -349,9 +355,13 @@ class HomeFragment : Fragment() {
         }
 
         // Observe les groupes ici, pour mettre à jour la liste dynamiquement
-        homeViewModel.groups.observe(viewLifecycleOwner) { groups ->
-            val allGroups = listOf(FavoriteGroup(-1, "Tous")) + groups
-            groupManageAdapter?.updateGroups(allGroups)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.groups.collect { groups ->
+                    val allGroups = listOf(FavoriteGroup(-1, "Tous")) + groups
+                    groupManageAdapter?.updateGroups(allGroups)
+                }
+            }
         }
 
         groupDialog?.show()

@@ -1,12 +1,14 @@
 package fr.mastersd.sime.scanlib.ui.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.mastersd.sime.scanlib.data.Book
 import fr.mastersd.sime.scanlib.data.BookRepository
 import fr.mastersd.sime.scanlib.data.FavoriteGroup
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -14,34 +16,34 @@ import javax.inject.Inject
 class DetailsViewModel @Inject constructor(
     private val repository: BookRepository
 ) : ViewModel() {
+
+    private val _groups = MutableStateFlow<List<FavoriteGroup>>(emptyList())
+    val groups: StateFlow<List<FavoriteGroup>> = _groups.asStateFlow()
+
+    private val _bookGroupIds = MutableStateFlow<List<Long>>(emptyList())
+    val bookGroupIds: StateFlow<List<Long>> = _bookGroupIds.asStateFlow()
+
     fun updateBook(book: Book) {
         viewModelScope.launch {
             repository.updateBook(book)
         }
     }
 
-    val groups = MutableLiveData<List<FavoriteGroup>>()
-
     fun loadGroups() {
         viewModelScope.launch {
-            val loadedGroups = repository.getAllFavoriteGroups()
-            groups.postValue(loadedGroups)
+            _groups.value = repository.getAllFavoriteGroups()
+        }
+    }
+
+    fun loadBookGroupIds(bookId: String) {
+        viewModelScope.launch {
+            _bookGroupIds.value = repository.getGroupIdsForBook(bookId)
         }
     }
 
     fun addBookToGroup(bookId: String, groupId: Long) {
         viewModelScope.launch {
             repository.addBookToGroup(bookId, groupId)
-        }
-    }
-
-    //===============================================================
-    val bookGroupIds = MutableLiveData<List<Long>>() // Les groupes du livre
-
-    fun loadBookGroupIds(bookId: String) {
-        viewModelScope.launch {
-            val ids = repository.getGroupIdsForBook(bookId)
-            bookGroupIds.postValue(ids)
         }
     }
 
@@ -62,7 +64,4 @@ class DetailsViewModel @Inject constructor(
             }
         }
     }
-
-
-
 }
